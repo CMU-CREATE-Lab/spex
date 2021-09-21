@@ -54,6 +54,14 @@
 					],
 					"name": "Test",
 				},
+				{
+					"cmd":
+					[
+						"mix",
+						"docs"
+					],
+					"name": "ExDoc",
+				},
 			],
 			"working_dir": "${project_path}",
 		},
