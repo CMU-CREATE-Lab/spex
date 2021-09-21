@@ -216,7 +216,7 @@ regressors = for spec <- refspectra, do: RefSpec.regressor(spec, uvspec_wl)
 # for spec <- refspectra, do: Enum.max(spec.spectrum.wavelength)
 ```
 
-<!-- livebook:{"livebook_object":"cell_input","name":"uvspec_date","reactive":true,"type":"text","value":"2021-08-21"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"uvspec_date","reactive":true,"type":"text","value":"2021-08-22"} -->
 
 ```elixir
 # construct iso860 string from date
@@ -576,10 +576,14 @@ betas =
   end
 ```
 
+<!-- livebook:{"livebook_object":"cell_input","name":"plot_sample","reactive":true,"type":"number","value":"10"} -->
+
 ```elixir
-y = Enum.at(y_sources, 130)
-y_reg = Enum.at(y_models, 130)
-b = Enum.at(betas, 130)
+{plot_sample, "\n"} = IO.gets("plot_sample") |> Integer.parse()
+
+y = Enum.at(y_sources, plot_sample)
+y_reg = Enum.at(y_models, plot_sample)
+b = Enum.at(betas, plot_sample)
 
 Vl.new(width: 700, height: 400)
 |> Vl.data_from_series(
