@@ -370,6 +370,10 @@ $$
 A = \frac{\sigma l}{\ln 10} n \quad \rightarrow \quad n = A\frac{\ln 10}{\sigma l}.
 $$
 
+<!-- livebook:{"break_markdown":true} -->
+
+
+
 ```elixir
 
 ```
@@ -401,12 +405,21 @@ one can easily compute $I_{\textrm{max}}$ as the maximum intensities over all sa
 This can be used to establish a clean air baseline, 
 through the attenuation of which transient pollution can be measured.
 
-The absorbances are additive  in the logarithm of the transmittance, as $ T = 10^{-A} $, 
+The absorbances are additive  in the logarithm of the transmittance, as $ T = e^{-\tau} $, 
 and therefore we should be able to run a linear regression in that space.
 $$
-
-* \log T = \sum A
-  $$
+\ - \ln T = \sum \tau
+$$
+Knowing the path length $l$, and $\tau = \sigma l n$, $l \cdot n=\frac{\tau}{\sigma}$.
+The result parameter of a linear regression $\beta$ relates as $\tau = \sigma \beta$, 
+and therefore
+$$
+n = \frac{\beta}{l}
+$$
+Knowing the number concentration $n$, and molecular mass $m$ we can compute mass concentration $\rho$ by
+$$
+\rho = \frac{n \cdot m}{\textrm{N}_\textrm{A}}
+$$
 
 ```elixir
 defmodule Test do
