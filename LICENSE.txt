@@ -1,4 +1,6 @@
-This file is part of Spex.
+This file is part of Spex. Copyright 2021 Carnegie Mellon University CREATE Lab. 
+Authors: 
+    Dömötör Gulyas <dgulyas.createlab@gmail.com>
 
 Spex is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
