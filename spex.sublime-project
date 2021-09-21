@@ -1,0 +1,86 @@
+{
+	"build_systems":
+	[
+		{
+			"cmd":
+			[
+				"mix",
+				"compile"
+			],
+			"env":
+			{
+				"LIBTORCH_DIR": "/Users/dog/Documents/CREATE-Lab/libtorch",
+			},
+			"file_patterns":
+			[
+				"*.ex",
+				"*.exs"
+			],
+			"file_regex": "^\\s\\s\\s*([^:]+):(\\d+).*",
+			"name": "mix",
+			"selector": "source.*",
+			"variants":
+			[
+				{
+					"cmd":
+					[
+						"mix",
+						"clean"
+					],
+					"name": "Clean",
+				},
+				{
+					"cmd":
+					[
+						"mix",
+						"deps.update",
+						"--all"
+					],
+					"name": "Deps",
+				},
+				{
+					"cmd":
+					[
+						"mix",
+						"compile"
+					],
+					"name": "Compile",
+				},
+				{
+					"cmd":
+					[
+						"mix",
+						"test"
+					],
+					"name": "Test",
+				},
+			],
+			"working_dir": "${project_path}",
+		},
+	],
+	"folders":
+	[
+		{
+			"path": ".",
+		},
+		{
+			"path": "/Users/dog/Documents/CREATE-Lab/uvspec/data_analysis"
+		},
+	],
+	"settings":
+	{
+		"elixirLS": {
+			"dialyzerEnabled": true,
+			"mixEnv": "dev",
+			"mixTarget": "rpi0",
+			"projectDir": "${project_path}",
+		},
+		"LSP":
+		{
+			"elixir-ls":
+			{
+				"enabled": true,
+			},
+		},
+	},
+}

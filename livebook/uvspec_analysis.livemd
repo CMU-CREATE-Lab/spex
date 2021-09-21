@@ -1,0 +1,828 @@
+# Spectrum Modal Analysis
+
+## Dependencies
+
+~Bazel is needed for exla `brew install bazel`~
+
+Libtorch is needed, but `brew install libtorch` will not work, and one needs `pip3 install libtorch`.
+
+Set `LIBTORCH_DIR=/usr/local/lib/python3.9/site-packages/libtorch/`, or whatever the installed libtorch ends up as, when starting livebook.
+
+~`EXLA` is going to take a while to build (on the order of hours, possibly), but it is cached through bazel, so this only needs to be done once per EXLA release.~
+
+EXLA should come as a binary now, without needing to build. set `XLA_BUILD=force` in livebook env vars to force building lengthily from source.
+
+Protobuf installation in `$PATH` may cause trouble, so unlink when building XLA.
+
+```elixir
+# In case the Mix.install() cache gets screwed up, 
+# we can get the path to it for digging into the problem
+Mix.Utils.mix_cache()
+```
+
+```elixir
+Mix.install([
+  # basic numerics
+  {:exla, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "exla"},
+  {:torchx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "torchx"},
+  {:nx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "nx", override: true},
+  # {:nx, "~> 0.1.0-dev", github: "dognotdog/nx", sparse: "nx", override: true, branch: "triangular-solve-dims-fix"},
+
+  # visualization
+  :vega_lite,
+  :kino,
+  # html/json parsing
+  {:floki, "~> 0.31.0"},
+  {:jason, "~> 1.2"},
+  # spectrometer tools path relative to livebook install, not notebook
+  {:spex, path: "../spex"}
+])
+
+# , force: true)
+
+require Logger
+alias VegaLite, as: Vl
+alias Spex.RefSpec.Mainz, as: Mainz
+alias Spex.RefSpec.Hitran, as: Hitran
+alias Spex.RefSpec.JcampDx, as: JcampDx
+
+# set default backend for numerical compute
+# Nx.default_backend(EXLA.DeviceBackend)
+# Nx.default_backend(Torchx.Backend)
+```
+
+## Getting Data
+
+https://aircocalc-www.createlab.org/spectrometer_data/ has the spectrometer data, sorted by year/month/day/
+
+<!-- livebook:{"disable_formatting":true} -->
+
+```elixir
+defmodule SMA do
+  def plotxy(x, y) do
+    # plot a spectrum
+    Vl.new(width: 700, height: 400)
+    |> Vl.data_from_series(x: x, y: y)
+    |> Vl.mark(:circle)
+    |> Vl.encode(:size, value: 4)
+    |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [210, 410]])
+    |> Vl.encode_field(:y, "y", type: :quantitative)
+  end
+end
+
+uvspec_wl = [
+  218.0596, 218.2508, 218.442, 218.6332, 218.8244, 219.0156, 219.2067, 219.3979, 219.589, 
+  219.7801, 219.9712, 220.1623, 220.3533, 220.5444, 220.7354, 220.9264, 221.1174, 221.3083,
+  221.4993, 221.6902, 221.8812, 222.0721, 222.263, 222.4538, 222.6447, 222.8355, 223.0264, 
+  223.2172, 223.408, 223.5987, 223.7895, 223.9802, 224.1709, 224.3616, 224.5524, 224.743, 
+  224.9337, 225.1243, 225.315, 225.5056, 225.6962, 225.8867, 226.0773, 226.2678, 226.4584, 
+  226.6489, 226.8394, 227.0298, 227.2203, 227.4108, 227.6012, 227.7916, 227.982, 228.1723, 
+  228.3627, 228.5531, 228.7434, 228.9337, 229.124, 229.3143, 229.5045, 229.6948, 229.885, 
+  230.0752, 230.2654, 230.4556, 230.6457, 230.8358, 231.026, 231.2161, 231.4062, 231.5963, 
+  231.7863, 231.9764, 232.1664, 232.3564, 232.5464, 232.7364, 232.9263, 233.1163, 233.3062, 
+  233.4961, 233.686, 233.8758, 234.0657, 234.2555, 234.4454, 234.6352, 234.825, 235.0147, 
+  235.2045, 235.3942, 235.5839, 235.7737, 235.9633, 236.153, 236.3427, 236.5323, 236.7219, 
+  236.9115, 237.1011, 237.2907, 237.4803, 237.6698, 237.8593, 238.0488, 238.2383, 238.4278, 
+  238.6172, 238.8066, 238.9961, 239.1855, 239.3748, 239.5642, 239.7536, 239.9429, 240.1322,
+  240.3215, 240.5108, 240.7001, 240.8893, 241.0786, 241.2677, 241.457, 241.6461, 241.8353, 
+  242.0244, 242.2136, 242.4027, 242.5918, 242.7809, 242.9699, 243.159, 243.348, 243.537, 
+  243.726, 243.915, 244.1039, 244.2929, 244.4818, 244.6707, 244.8596, 245.0485, 245.2373, 
+  245.4262, 245.615, 245.8038, 245.9926, 246.1814, 246.3701, 246.5589, 246.7476, 246.9363, 
+  247.1249, 247.3136, 247.5023, 247.6909, 247.8795, 248.0681, 248.2567, 248.4453, 248.6338, 
+  248.8224, 249.0109, 249.1994, 249.3878, 249.5763, 249.7648, 249.9532, 250.1416, 250.33, 
+  250.5183, 250.7067, 250.8951, 251.0834, 251.2717, 251.46, 251.6483, 251.8365, 252.0247, 
+  252.213, 252.4012, 252.5894, 252.7775, 252.9657, 253.1538, 253.3419, 253.53, 253.7181, 
+  253.9062, 254.0942, 254.2823, 254.4703, 254.6583, 254.8463, 255.0342, 255.2222, 255.4101, 
+  255.598, 255.7859, 255.9738, 256.1616, 256.3495, 256.5373, 256.7251, 256.9129, 257.1006, 
+  257.2884, 257.4761, 257.6638, 257.8515, 258.0392, 258.2269, 258.4146, 258.6022, 258.7898, 
+  258.9774, 259.165, 259.3525, 259.5401, 259.7276, 259.9151, 260.1026, 260.2901, 260.4776, 
+  260.665, 260.8524, 261.0398, 261.2272, 261.4146, 261.6019, 261.7893, 261.9766, 262.1639, 
+  262.3512, 262.5384, 262.7257, 262.9129, 263.1001, 263.2873, 263.4745, 263.6617, 263.8488, 
+  264.0359, 264.2231, 264.4101, 264.5972, 264.7842, 264.9713, 265.1583, 265.3453, 265.5323, 
+  265.7193, 265.9062, 266.0931, 266.2801, 266.4669, 266.6538, 266.8407, 267.0276, 267.2143, 
+  267.4012, 267.588, 267.7747, 267.9615, 268.1482, 268.3349, 268.5217, 268.7083, 268.895, 
+  269.0817, 269.2682, 269.4549, 269.6415, 269.8281, 270.0146, 270.2012, 270.3877, 270.5742, 
+  270.7607, 270.9472, 271.1336, 271.32, 271.5065, 271.6929, 271.8792, 272.0656, 272.252, 
+  272.4383, 272.6246, 272.8109, 272.9972, 273.1835, 273.3697, 273.5559, 273.7421, 273.9283, 
+  274.1145, 274.3007, 274.4868, 274.6729, 274.859, 275.0451, 275.2311, 275.4172, 275.6032,
+  275.7892, 275.9752, 276.1612, 276.3472, 276.5331, 276.719, 276.9049, 277.0908, 277.2767, 
+  277.4625, 277.6484, 277.8342, 278.02, 278.2057, 278.3915, 278.5772, 278.763, 278.9487, 
+  279.1343, 279.32, 279.5057, 279.6913, 279.877, 280.0625, 280.2481, 280.4337, 280.6192, 
+  280.8048, 280.9903, 281.1758, 281.3612, 281.5467, 281.7321, 281.9175, 282.1029, 282.2884, 
+  282.4737, 282.6591, 282.8444, 283.0297, 283.215, 283.4002, 283.5855, 283.7707, 283.956, 
+  284.1412, 284.3264, 284.5115, 284.6967, 284.8818, 285.0669, 285.252, 285.4371, 285.6222, 
+  285.8072, 285.9922, 286.1772, 286.3622, 286.5472, 286.7321, 286.9171, 287.102, 287.2869, 
+  287.4717, 287.6566, 287.8415, 288.0263, 288.2111, 288.3959, 288.5806, 288.7654, 288.9501, 
+  289.1348, 289.3195, 289.5042, 289.6889, 289.8735, 290.0581, 290.2428, 290.4273, 290.6119, 
+  290.7965, 290.981, 291.1655, 291.35, 291.5345, 291.719, 291.9034, 292.0878, 292.2722, 
+  292.4566, 292.641, 292.8253, 293.0096, 293.194, 293.3783, 293.5626, 293.7468, 293.9311, 
+  294.1153, 294.2995, 294.4837, 294.6678, 294.852, 295.0361, 295.2202, 295.4043, 295.5884, 
+  295.7725, 295.9565, 296.1405, 296.3246, 296.5085, 296.6925, 296.8764, 297.0603, 297.2443, 
+  297.4282, 297.612, 297.7959, 297.9797, 298.1635, 298.3474, 298.5311, 298.7149, 298.8987, 
+  299.0823, 299.2661, 299.4498, 299.6334, 299.8171, 300.0007, 300.1843, 300.368, 300.5515, 
+  300.7351, 300.9186, 301.1021, 301.2857, 301.4691, 301.6526, 301.8361, 302.0195, 302.2029, 
+  302.3863, 302.5697, 302.753, 302.9364, 303.1197, 303.303, 303.4863, 303.6696, 303.8528, 
+  304.036, 304.2192, 304.4024, 304.5856, 304.7688, 304.9519, 305.135, 305.3181, 305.5012, 
+  305.6842, 305.8673, 306.0504, 306.2333, 306.4163, 306.5993, 306.7822, 306.9652, 307.1481, 
+  307.331, 307.5139, 307.6967, 307.8796, 308.0624, 308.2452, 308.428, 308.6107, 308.7935, 
+  308.9762, 309.1589, 309.3416, 309.5243, 309.7069, 309.8896, 310.0721, 310.2548, 310.4373, 
+  310.6199, 310.8024, 310.985, 311.1674, 311.3499, 311.5324, 311.7148, 311.8973, 312.0797, 
+  312.2621, 312.4445, 312.6268, 312.8091, 312.9915, 313.1738, 313.356, 313.5383, 313.7206, 
+  313.9027, 314.085, 314.2672, 314.4493, 314.6314, 314.8136, 314.9957, 315.1778, 315.3598, 
+  315.5419, 315.724, 315.9059, 316.088, 316.2699, 316.4519, 316.6338, 316.8157, 316.9977, 
+  317.1795, 317.3614, 317.5432, 317.7251, 317.9069, 318.0887, 318.2704, 318.4522, 318.6339, 
+  318.8156, 318.9973, 319.179, 319.3607, 319.5423, 319.7239, 319.9055, 320.0871, 320.2687, 
+  320.4502, 320.6317, 320.8132, 320.9947, 321.1761, 321.3576, 321.5391, 321.7205, 321.9019, 
+  322.0832, 322.2646, 322.4459, 322.6272, 322.8085, 322.9898, 323.1711, 323.3523, 323.5335, 
+  323.7147, 323.8959, 324.0771, 324.2582, 324.4393, 324.6204, 324.8015, 324.9826, 325.1637, 
+  325.3447, 325.5257, 325.7067, 325.8877, 326.0686, 326.2496, 326.4305, 326.6114, 326.7922, 
+  326.9731, 327.1539, 327.3347, 327.5155, 327.6963, 327.8771, 328.0578, 328.2385, 328.4193, 
+  328.5999, 328.7806, 328.9613, 329.1419, 329.3225, 329.5031, 329.6837, 329.8642, 330.0447, 330.2252, 330.4057, 330.5862, 330.7667, 330.9471, 331.1275, 331.3079, 331.4883, 331.6687, 331.849, 332.0293, 332.2096, 332.3899, 332.5702, 332.7504, 332.9306, 333.1108, 333.291, 333.4712, 333.6514, 333.8315, 334.0116, 334.1917, 334.3717, 334.5518, 334.7318, 334.9119, 335.0918, 335.2718, 335.4518, 335.6317, 335.8116, 335.9915, 336.1714, 336.3513, 336.5311, 336.7109, 336.8907, 337.0705, 337.2502, 337.43, 337.6097, 337.7894, 337.9691, 338.1488, 338.3284, 338.508, 338.6877, 338.8672, 339.0468, 339.2263, 339.4059, 339.5854, 339.7649, 339.9443, 340.1238, 340.3032, 340.4826, 340.662, 340.8414, 341.0207, 341.2001, 341.3794, 341.5587, 341.738, 341.9172, 342.0965, 342.2757, 342.4549, 342.6341, 342.8132, 342.9923, 343.1715, 343.3506, 343.5296, 343.7087, 343.8878, 344.0668, 344.2458, 344.4248, 344.6037, 344.7827, 344.9616, 345.1405, 345.3194, 345.4982, 345.6771, 345.8559, 346.0347, 346.2135, 346.3923, 346.571, 346.7498, 346.9285, 347.1071, 347.2859, 347.4645, 347.6431, 347.8217, 348.0003, 348.1789, 348.3574, 348.5359, 348.7145, 348.893, 349.0714, 349.2499, 349.4283, 349.6068, 349.7852, 349.9635, 350.1419, 350.3202, 350.4985, 350.6768, 350.8551, 351.0334, 351.2116, 351.3898, 351.568, 351.7462, 351.9243, 352.1025, 352.2806, 352.4587, 352.6368, 352.8148, 352.9929, 353.1709, 353.3489, 353.5268, 353.7048, 353.8828, 354.0607, 354.2386, 354.4165, 354.5943, 354.7722, 354.95, 355.1278, 355.3056, 355.4833, 355.6611, 355.8388, 356.0165, 356.1942, 356.3719, 356.5495, 356.7271, 356.9047, 357.0823, 357.2599, 357.4374, 357.6149, 357.7924, 357.9699, 358.1474, 358.3248, 358.5023, 358.6797, 358.8571, 359.0344, 359.2118, 359.3891, 359.5664, 359.7437, 359.9209, 360.0982, 360.2754, 360.4526, 360.6298, 360.807, 360.9841, 361.1613, 361.3383, 361.5154, 361.6925, 361.8695, 362.0466, 362.2236, 362.4005, 362.5775, 362.7545, 362.9314, 363.1083, 363.2852, 363.462, 363.6389, 363.8157, 363.9925, 364.1693, 364.346, 364.5228, 364.6996, 364.8762, 365.0529, 365.2296, 365.4062, 365.5829, 365.7595, 365.9361, 366.1126, 366.2892, 366.4657, 366.6422, 366.8186, 366.9951, 367.1716, 367.348, 367.5244, 367.7008, 367.8772, 368.0535, 368.2298, 368.4061, 368.5824, 368.7586, 368.9349, 369.1111, 369.2873, 369.4635, 369.6396, 369.8158, 369.9919, 370.168, 370.3441, 370.5202, 370.6962, 370.8722, 371.0482, 371.2242, 371.4002, 371.5761, 371.752, 371.9279, 372.1038, 372.2796, 372.4555, 372.6313, 372.8071, 372.9829, 373.1586, 373.3344, 373.5101, 373.6858, 373.8615, 374.0371, 374.2127, 374.3884, 374.564, 374.7395, 374.9151, 375.0906, 375.2661, 375.4416, 375.6171, 375.7925, 375.968, 376.1434, 376.3188, 376.4941, 376.6695, 376.8448, 377.0201, 377.1954, 377.3707, 377.5459, 377.7212, 377.8964, 378.0715, 378.2467, 378.4218, 378.597, 378.7721, 378.9472, 379.1222, 379.2973, 379.4723, 379.6473, 379.8223, 379.9972, 380.1722, 380.3471, 380.522, 380.6969, 380.8717, 381.0466, 381.2214, 381.3962, 381.571, 381.7457, 381.9204, 382.0952, 382.2699, 382.4445, 382.6192, 382.7938, 382.9685, 383.1431, 383.3176, 383.4922, 383.6667, 383.8412, 384.0157, 384.1902, 384.3646, 384.5391, 384.7134, 384.8878, 385.0622, 385.2365, 385.4109, 385.5852, 385.7594, 385.9337, 386.1079, 386.2822, 386.4564, 386.6306, 386.8047, 386.9789, 387.153, 387.3271, 387.5012, 387.6752, 387.8492, 388.0233, 388.1972, 388.3712, 388.5452, 388.7191, 388.893, 389.0669, 389.2408, 389.4146, 389.5884, 389.7623, 389.9361, 390.1098, 390.2835, 390.4573, 390.631, 390.8047, 390.9784, 391.152, 391.3256, 391.4992, 391.6728, 391.8464, 392.0199, 392.1934, 392.3669, 392.5403, 392.7138, 392.8873, 393.0607, 393.2341, 393.4074, 393.5808, 393.7542, 393.9274, 394.1007, 394.274, 394.4472, 394.6205, 394.7937, 394.9668, 395.14, 395.3131, 395.4863, 395.6594, 395.8325, 396.0055, 396.1786, 396.3516, 396.5246, 396.6975, 396.8705, 397.0434, 397.2163, 397.3892, 397.5621, 397.735, 397.9077, 398.0806, 398.2534, 398.4261, 398.5989, 398.7716, 398.9443, 399.117, 399.2896, 399.4623, 399.6349, 399.8075, 399.9801, 400.1526, 400.3252, 400.4977, 400.6702, 400.8427, 401.0151, 401.1875, 401.36, 401.5323, 401.7047, 401.877, 402.0494, 402.2216, 402.394, 402.5662, 402.7385, 402.9107, 403.0829, 403.2551, 403.4272, 403.5994, 403.7715, 403.9436, 404.1156
+]
+
+
+
+
+```
+
+### Spectral Reference Data Sources
+
+* [www.uv-vis-spectral-atlas-mainz.org](www.uv-vis-spectral-atlas-mainz.org)
+* hitran.org
+* webbook.nist.gov
+
+<!-- livebook:{"disable_formatting":true} -->
+
+```elixir
+refdata_path = "../spex/reference-data"
+
+naphthalene = Mainz.load!(Path.join([refdata_path, "C10H8_Grosch(2015)_296K_200-310nm.txt"]))
+{naphthalene_wl, naphthalene_norm} = Mainz.to_norm_spectrum(naphthalene)
+
+benzene = Mainz.load!(Path.join([refdata_path, "C6H6_Dawes(2017)_298K_115-330nm.txt"]))
+{benzene_wl, benzene_norm} = Mainz.to_norm_spectrum(benzene)
+
+so2 = Mainz.load!(Path.join([refdata_path, "SO2_Danielache(2008)_293K_183-350nm(32SO2).txt"]))
+{so2_wl, so2_norm} = Mainz.to_norm_spectrum(so2)
+
+o3 = Mainz.load!(Path.join([refdata_path, "O3_Serdyuchenko(2014)_293K_213-1100nm(2013 version).txt"]))
+
+{o3_wl, o3_norm} = Mainz.to_norm_spectrum(o3)
+
+no2 = Mainz.load!(Path.join([refdata_path, "NO2_Bogumil(2003)_293K_230-930nm.txt"]))
+{no2_wl, no2_norm} = Mainz.to_norm_spectrum(no2)
+
+benzene_norm_spec =
+  Spex.Interp.rebin(benzene_wl, Nx.to_flat_list(benzene_norm), uvspec_wl)
+  |> Nx.tensor(names: [:wavelength])
+```
+
+```elixir
+# [so2] = Hitran.load_xsc("../uvspec/612d0a9e/SO2_298.0_0.0_23995.0-43985.0_09.xsc")
+# {so2_wl, so2_norm} = Hitran.to_norm_spectrum(so2)
+# [o3] = Hitran.load_xsc("../uvspec/612d2557/O3_293.0K-0.0Torr_28901.0-40999.0_118.xsc")
+# {o3_wl, o3_norm} = Hitran.to_norm_spectrum(o3)
+# [benzene] = Hitran.load_xsc("../uvspec/612d24db/C6H6_293.0_0.0_36990.0-41785.0_09.xsc")
+# {benzene_wl, benzene_norm} = Hitran.to_norm_spectrum(benzene)
+[toluene] =
+  Hitran.load_xsc(Path.join([refdata_path, "612d27aa/C7H8_293.0_0.0_35990.0-41285.0_09.xsc"]))
+
+{toluene_wl, toluene_norm} = Hitran.to_norm_spectrum(toluene)
+
+# SMA.plotxy(so2_wl, Nx.to_flat_list(so2_norm))
+SMA.plotxy(no2_wl, Nx.to_flat_list(no2_norm))
+```
+
+```elixir
+# {naphthalene_wl, naphthalene_norm} =
+#   JcampDx.load!("../uvspec/91-20-3-UVVis.jdx") |> JcampDx.to_norm_spectrum()
+```
+
+```elixir
+# absorbtion regression
+
+alias Spex.RefSpec, as: RefSpec
+
+benzene_regressor = RefSpec.regressor(benzene, uvspec_wl)
+o3_regressor = RefSpec.regressor(o3, uvspec_wl)
+toluene_regressor = RefSpec.regressor(toluene, uvspec_wl)
+SMA.plotxy(uvspec_wl, Nx.to_flat_list(toluene_regressor))
+
+# need to find a better toluene reference, as ours only goes to 277nm
+refspectra = [benzene, o3, toluene, naphthalene, so2, no2]
+refnames = [:benzene, :ozone, :toluene, :naphthalene, :so2, :no2]
+regressors = for spec <- refspectra, do: RefSpec.regressor(spec, uvspec_wl)
+# RefSpec.minmax_wavelengths_all(refspectra)
+# for spec <- refspectra, do: Enum.max(spec.spectrum.wavelength)
+```
+
+<!-- livebook:{"livebook_object":"cell_input","name":"uvspec_date","reactive":true,"type":"text","value":"2021-08-21"} -->
+
+```elixir
+# construct iso860 string from date
+date_string = String.trim(IO.gets("uvspec_date")) <> "T00:00:00Z"
+data_date = NaiveDateTime.from_iso8601!(date_string)
+
+date_path =
+  "#{:io_lib.format("~B/~2..0B/~2..0B", [data_date.year, data_date.month, data_date.day])}"
+
+data_url = "https://aircocalc-www.createlab.org/spectrometer_data/#{date_path}/json"
+```
+
+```elixir
+# filter for files that begin with uvspec
+data_files = for <<"uvspec" <> _>> = name <- Spex.WebSpec.list_html_dir(data_url), do: name
+```
+
+## Section
+
+Plot a single spectrum as a sanity check, simply by plotting the first spectrum from the given day:
+
+```elixir
+[file | _] = data_files
+
+uvspec_data = Spex.WebSpec.get_uvspec_data_file(<<data_url <> "/" <> file>>)
+x = Jason.decode!("[#{uvspec_data["Wavelengths"]}]")
+y = Jason.decode!("[#{uvspec_data["Signals"]}]")
+
+# plot a spectrum
+Vl.new(width: 700, height: 400)
+|> Vl.data_from_series(x: x, y: y)
+|> Vl.mark(:circle)
+|> Vl.encode(:size, value: 4)
+|> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [210, 410]])
+|> Vl.encode_field(:y, "y", type: :quantitative)
+
+# SMA.get_uvspec_data_files(data_url)
+```
+
+```elixir
+# create Nx tensor from full day's data
+
+uvspec_samples = Spex.WebSpec.get_uvspec_data_files(data_url)
+# get wavelength info
+[%{"Wavelengths" => uvspec_wl_json} | _] = uvspec_samples
+# uvspec_wl = Jason.decode!("[#{uvspec_wl_json}]")
+# get timestamps
+timestamps =
+  for sample <- uvspec_samples do
+    {:ok, date, _} = DateTime.from_iso8601(sample["utc_timestamp"])
+    date
+  end
+
+# get sample data
+signals =
+  for sample <- uvspec_samples do
+    y = Jason.decode!("[#{sample["Signals"]}]")
+    y
+  end
+
+# combine samples to reduce the number of samples for the SVD
+chunk_tensors =
+  for chunk <- Enum.chunk_every(signals, 10) do
+    chunk_tensor = Nx.tensor(chunk, names: [:time, :wavelength])
+    Nx.mean(chunk_tensor, axes: [:time], keep_axes: true)
+  end
+
+minute_signal_tensor =
+  for chunk <- signals do
+    Nx.tensor([chunk], names: [:time, :wavelength])
+  end
+  |> Nx.concatenate(axis: :time)
+
+raw_signal_tensor =
+  Nx.concatenate(
+    for chunk <- chunk_tensors do
+      chunk |> Nx.backend_transfer()
+    end,
+    axis: :time
+  )
+
+# signal_tensor = Nx.tensor(signals, names: [:time, :wavelength])
+```
+
+## Data Analysis
+
+### Basic Spectroscopy Theory
+
+The spectroscopy data we get out of the spectrometer is a signal strength for each wavelength the spectrometer measures. 
+The light source is a Deuterium lamp, with an open path of approx 17 meters.
+
+The gases in the open path absorb different parts of the spectrum, as described in by the [Beer-Lambert Law](https://en.wikipedia.org/wiki/Beer–Lambert_law).
+
+For a single material
+
+$$
+A = \varepsilon l c
+$$
+
+where
+
+* $A$ is the absorbance
+* $\varepsilon$ is the absorptivity / molar attenuation coefficient
+* $l$ is the optical path length
+* $c$ is the concentration of the attenuating material
+
+or
+
+$$
+\tau = \sigma \int_l n(x) d x = \sigma N
+$$
+
+$$
+A = \varepsilon \int_l c(x) d x
+$$
+
+where
+
+* $\tau$ is the optical depth
+* $\sigma$ is the attenuation cross section
+* $l$ is the optical path length
+* $n$ is the number density of the attenuating molecules
+* $N$ is the total number of molecules in the signal path
+
+Both absorbance and optical depth are additive across different materials in the light path, and relate to the transmittance $T$ by
+
+$$
+ T = \frac{\Phi_t}{\Phi_i} = e^{-\tau} = 10^{-A}
+ $$
+
+where
+
+* $\Phi_i$ is the *incident* radiant flux into the material,
+* and $\Phi_t$ is the *transmitted* radiant flux received through the material sample,
+
+which shows that in terms of transmittance, the effects are multiplicative.
+
+<!-- livebook:{"break_markdown":true} -->
+
+The attenuation cross section and molar attenuation coefficients are related by
+$$
+\varepsilon = \frac{\textrm{N}_\textrm{A}}{\ln 10}\sigma
+$$
+thus 
+$$
+A = \frac{\textrm{N}_\textrm{A}}{\ln 10} \sigma l c, \quad
+c = \frac{n}{\textrm{N}_\textrm{A}}
+$$ 
+and 
+$$
+A = \frac{\sigma l}{\ln 10} n \quad \rightarrow \quad n = A\frac{\ln 10}{\sigma l}.
+$$
+
+```elixir
+
+```
+
+#### Relating Theory to Spectrometer Data
+
+The data received from the spectrometer is incident intensity $I_i$, which relates to $T$ by
+$$
+T = \frac{I_t}{I_i}
+$$
+thus it does not matter whether we see $I$ or $\Phi$ for calculating $T$.
+
+Assuming that pollutant gases are of a generally low enough concentration 
+(in the ppb or ppm ranges) 
+that they can be treated as additive to the normal atomsphere $T_0$,
+any particular pollutant $T_p$ contributes to total $T$ by
+$$
+T = T_0 \cdot \prod_p T_p
+$$
+
+The absorbtion (not the same as absorbance!) is $ 1/ T $.
+
+<!-- livebook:{"break_markdown":true} -->
+
+#### Statistical analysis of the signal
+
+For a cohort of samples, let's say a day, 
+one can easily compute $I_{\textrm{max}}$ as the maximum intensities over all samples.
+This can be used to establish a clean air baseline, 
+through the attenuation of which transient pollution can be measured.
+
+The absorbances are additive  in the logarithm of the transmittance, as $ T = 10^{-A} $, 
+and therefore we should be able to run a linear regression in that space.
+$$
+
+* \log T = \sum A
+  $$
+
+```elixir
+defmodule Test do
+  @doc """
+  return concentration in ug/m^3 for regression results
+  `beta` is a tensor with one more entry than refnames 
+  at the beginning for the constant factor, 
+  which is ignored here.
+  """
+  def attenuation_to_concentration(beta, refnames, opts \\ []) do
+    # quantifying the attenuation
+    # beta containes the attenuations
+    # path length is 17 meters
+    # sigma is [cm^2/mol] from the reference data
+    # number density n is [1/volume]
+    # \beta is result of the linear regression, and it relates \tau = \beta \sigma
+    path_length = Keyword.get(opts, :path_length_m, 17.0)
+    # \tau = \sigma l n
+    # -> \tau / \sigma = \beta = l n
+    # -> n = \beta / l
+
+    na = 6.02214076e23
+    # g/mol
+    molecular_masses = %{
+      benzene: 78.114,
+      ozone: 47.997,
+      toluene: 92.141,
+      naphthalene: 128.174,
+      so2: 64.066,
+      no2: 46.006
+    }
+
+    for {i, name} <- Enum.zip([Enum.to_list(1..Enum.count(refnames)), refnames]) do
+      b = beta[i] |> Nx.to_scalar()
+      # n is n/cm^3
+      n = b / (path_length * 100)
+      # g / cm^3 = 1.0e-6 g/m^3
+      density_g_cm3 = n / na * molecular_masses[name]
+      # convert to ug/m^3
+      {name, _density = density_g_cm3 * 1.0e6 * 1.0e6}
+    end
+  end
+
+  def compute_concentration(signal, ref_signal, wl, regressors, refnames, opts \\ []) do
+    wlmin = Keyword.get(opts, :wlmin, 220)
+    wlmax = Keyword.get(opts, :wlmax, 310)
+
+    {x, b} =
+      Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, wlmin: wlmin, wlmax: wlmax)
+
+    reg_range = Spex.Utils.in_range(wl, wlmin, wlmax)
+
+    y = Spex.Utils.signal_to_attenuation(signal, ref_signal)[reg_range]
+
+    y_reg = Nx.dot(x, b)
+
+    [y_modeled: y_reg, y_source: y, beta: b] ++ attenuation_to_concentration(b, refnames, opts)
+  end
+
+  def compute_all_concentrations(signals, ref_signal, wl, regressors, refnames, opts) do
+    nsignals = elem(Nx.shape(signals), 0)
+
+    for i <- 1..nsignals do
+      signal = signals[i - 1]
+      compute_concentration(signal, ref_signal, wl, regressors, refnames, opts)
+    end
+  end
+end
+```
+
+```elixir
+minute_signal_tensor
+```
+
+```elixir
+# trim signal to regressor range
+{wlmin, wlmax} = RefSpec.minmax_wavelengths_all(refspectra)
+wlmin = 220.0
+wlmax = 310.0
+reg_range = Spex.Utils.in_range(uvspec_wl, wlmin, wlmax)
+
+ref_signal = Nx.reduce_max(minute_signal_tensor, axes: [:time])
+# ref_signal = raw_signal_tensor[100]
+
+concentrations =
+  Test.compute_all_concentrations(
+    minute_signal_tensor,
+    ref_signal,
+    uvspec_wl,
+    regressors,
+    refnames,
+    []
+  )
+
+so2_conc =
+  for conc <- concentrations, into: [] do
+    Keyword.get(conc, :so2, 0.0)
+  end
+
+ozone_conc =
+  for conc <- concentrations, into: [] do
+    Keyword.get(conc, :ozone, 0.0)
+  end
+
+naphthalene_conc =
+  for conc <- concentrations, into: [] do
+    Keyword.get(conc, :naphthalene, 0.0)
+  end
+
+benzene_conc =
+  for conc <- concentrations, into: [] do
+    Keyword.get(conc, :benzene, 0.0)
+  end
+
+Vl.new(width: 700, height: 400)
+|> Vl.data_from_series(
+  x: Enum.to_list(1..1440),
+  so2: so2_conc,
+  ozone: ozone_conc,
+  naphthalene: naphthalene_conc,
+  benzene: benzene_conc
+)
+# |> Vl.mark(:circle)
+|> Vl.encode(:size, value: 4)
+|> Vl.repeat(
+  [layer: ["so2", "ozone", "naphthalene", "benzene"]],
+  Vl.new()
+  |> Vl.mark(:line, clip: true)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: [repeat: :layer])
+)
+```
+
+```elixir
+y_sources =
+  for conc <- concentrations, into: [] do
+    Keyword.get(conc, :y_source, 0.0)
+  end
+
+y_models =
+  for conc <- concentrations, into: [] do
+    Keyword.get(conc, :y_modeled, 0.0)
+  end
+
+betas =
+  for conc <- concentrations, into: [] do
+    Keyword.get(conc, :beta, 0.0)
+  end
+```
+
+```elixir
+y = Enum.at(y_sources, 130)
+y_reg = Enum.at(y_models, 130)
+b = Enum.at(betas, 130)
+
+Vl.new(width: 700, height: 400)
+|> Vl.data_from_series(
+  x: Enum.slice(uvspec_wl, reg_range),
+  y_orig: Nx.to_flat_list(y),
+  y_reg: Nx.to_flat_list(y_reg),
+  benzene:
+    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 0)[0][reg_range], 1 * Nx.to_scalar(b[1]))),
+  ozone:
+    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 1)[0][reg_range], 1 * Nx.to_scalar(b[2]))),
+  toluene:
+    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 2)[0][reg_range], 1 * Nx.to_scalar(b[3]))),
+  naphthalene:
+    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 3)[0][reg_range], 1 * Nx.to_scalar(b[4]))),
+  so2: Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 4)[0][reg_range], 1 * Nx.to_scalar(b[5]))),
+  no2: Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 5)[0][reg_range], 1 * Nx.to_scalar(b[6])))
+)
+# |> Vl.mark(:circle)
+|> Vl.encode(:size, value: 4)
+|> Vl.repeat(
+  [layer: ["y_orig", "y_reg", "benzene", "ozone", "toluene", "naphthalene", "so2", "no2"]],
+  Vl.new()
+  |> Vl.mark(:line, clip: true)
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [wlmin, wlmax]])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: [repeat: :layer])
+)
+```
+
+```elixir
+# cut off parts above 360nm
+nwl = Enum.count(uvspec_wl, fn x -> x < 360.0 end)
+signal_tensor = raw_signal_tensor[wavelength: 0..(nwl - 1)]
+
+# get maximum: this signal is the baseline of maximum transmissivity
+signal_max = Nx.reduce_max(signal_tensor, axes: [:time])
+
+# # normalize each wavelength to the maximum
+# norm_signal_tensor = Nx.divide(signal_tensor, signal_max)
+
+# Absorbtion (inverse of transmittance) for each sample In/Imax
+signal_tensor = Nx.divide(signal_tensor, signal_max)
+
+# # subtract maximum signal from all samples
+# signal_tensor = Nx.subtract(signal_tensor, signal_max)
+```
+
+```elixir
+defmodule SMANX do
+  import Nx.Defn
+
+  def svd(m, opts \\ []) do
+    # if the matrix is wider than tall, transpose it
+    {h, w} = Nx.shape(m)
+    transpose? = h < w
+
+    m = if transpose?, do: Nx.transpose(m), else: m
+
+    m = m |> Nx.backend_transfer(EXLA.DeviceBackend)
+    {u, s, v} = svdn(m, opts)
+
+    # if we had to transpose the matrix, reverse order and transpose results, too
+    if transpose?, do: {Nx.transpose(v), Nx.transpose(s), Nx.transpose(u)}, else: {u, s, v}
+  end
+
+  @defn_compiler EXLA
+  defn svdn(m, opts \\ []) do
+    Nx.LinAlg.svd(m, opts)
+  end
+end
+```
+
+```elixir
+# perform the SVD to get eigenvectors
+{u, s, v} = SMANX.svd(signal_tensor)
+```
+
+```elixir
+Nx.sum(signal_tensor, axes: [:time])
+```
+
+```elixir
+# SMA.plotxy(wl, Nx.to_flat_list(v[0]))
+# plot a spectrum
+plot_range = [220, 360]
+# plot_range = [220, 320]
+# plot_range = [290, 315]
+Vl.new(width: 700, height: 400, autosize: [type: "fit", contains: "content"])
+|> Vl.data_from_series(
+  x: uvspec_wl,
+  y0: Nx.to_flat_list(v[0]),
+  y1: Nx.to_flat_list(v[1]),
+  y2: Nx.to_flat_list(v[2]),
+  y3: Nx.to_flat_list(v[3])
+)
+|> Vl.transform(filter: [field: "x", range: plot_range])
+|> Vl.encode(:size, value: 1)
+|> Vl.repeat(
+  [layer: ["y0", "y1", "y2", "y3"]],
+  Vl.new()
+  |> Vl.mark(:line, clip: true)
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: [repeat: :layer])
+)
+```
+
+```elixir
+{times, _nsamples} = Nx.shape(signal_tensor)
+
+samples =
+  for i <- 0..(times - 1),
+      do: {"#{:io_lib.format("s~3..0B", [i])}", Nx.to_flat_list(signal_tensor[i])}
+
+y_names = for {name, _data} <- samples, do: name
+plot_data = [x: uvspec_wl] ++ samples
+
+so2_scaled = Nx.multiply(so2_norm, 500.0)
+
+# plot a spectrum
+plot_range = [210, 360]
+# plot_range = [220, 320]
+# plot_range = [290, 315]
+Vl.new(width: 700, height: 400, autosize: [type: "fit", contains: "content"])
+|> Vl.encode(:size, value: 1)
+|> Vl.data_from_series(plot_data)
+|> Vl.transform(filter: [field: "x", range: plot_range])
+|> Vl.repeat(
+  [layer: y_names],
+  Vl.new()
+  |> Vl.mark(:line, clip: true, stroke_width: 1.0)
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false], title: "I/Imax")
+  |> Vl.encode(:color, type: :nominal, datum: [repeat: :layer], scale: [scheme: "turbo"])
+  |> Vl.encode(:opacity, value: 0.5)
+)
+```
+
+```elixir
+# SMA.plotxy(wl, Nx.to_flat_list(v[0]))
+# plot a spectrum
+plot_range = [215, 360]
+# plot_range = [240, 270]
+# plot_range = [290, 315]
+so2_scaled = Nx.multiply(so2_norm, 500.0)
+benzene_scaled = Nx.multiply(benzene_norm, 1000.0)
+benzene_scaled_spec = Nx.multiply(benzene_norm_spec, 1000.0)
+toluene_scaled = Nx.multiply(toluene_norm, 300.0)
+o3_scaled = Nx.multiply(o3_norm, 300.0)
+naphthalene_scaled = Nx.multiply(naphthalene_norm, 1000.0)
+
+Vl.new(width: 800, height: 600, autosize: [type: "fit", contains: "content"])
+|> Vl.data_from_series(
+  x: uvspec_wl,
+  y0: Nx.to_flat_list(v[0]),
+  y1: Nx.to_flat_list(v[1]),
+  y2: Nx.to_flat_list(v[2]),
+  y3: Nx.to_flat_list(v[3])
+)
+|> Vl.transform(filter: [field: "x", range: plot_range])
+|> Vl.encode(:size, value: 1)
+|> Vl.layers([
+  Vl.new()
+  |> Vl.mark(:line, clip: true, opacity: 1.0)
+  # |> Vl.encode(:stroke_width, type: :quantitative, datum: 8.0)
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y0", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color,
+    type: :nominal,
+    value: "blue",
+    datum: "y0 (#{Nx.to_scalar(s[0])})",
+    scale: [scheme: "turbo"]
+  ),
+  Vl.new()
+  |> Vl.mark(:line, clip: true, opacity: 1.0)
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y1", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, value: "cyan", datum: "y1 (#{Nx.to_scalar(s[1])})"),
+  Vl.new()
+  |> Vl.mark(:line, clip: true, opacity: 1.0)
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y2", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, value: "green", datum: "y2 (#{Nx.to_scalar(s[2])})"),
+  Vl.new()
+  |> Vl.mark(:line, clip: true, opacity: 1.0)
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y3", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, value: "orange", datum: "y3 (#{Nx.to_scalar(s[3])})"),
+  Vl.new()
+  |> Vl.data_from_series(
+    x_so2: so2_wl,
+    y_so2: Nx.to_flat_list(so2_scaled)
+  )
+  |> Vl.transform(filter: [field: "x_so2", range: plot_range])
+  |> Vl.mark(:line, clip: true, opacity: 0.5, tooltip: "SO2")
+  |> Vl.encode_field(:x, "x_so2", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y_so2", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: "SO2"),
+  Vl.new()
+  |> Vl.data_from_series(
+    x: o3_wl,
+    y: Nx.to_flat_list(o3_scaled)
+  )
+  |> Vl.transform(filter: [field: "x", range: plot_range])
+  |> Vl.mark(:line, clip: true, opacity: 0.5, tooltip: "O3")
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: "O3"),
+  Vl.new()
+  |> Vl.data_from_series(
+    x: benzene_wl,
+    y: Nx.to_flat_list(benzene_scaled)
+  )
+  |> Vl.transform(filter: [field: "x", range: plot_range])
+  |> Vl.mark(:line, clip: true, opacity: 0.3, tooltip: "Benzene")
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: "Benzene"),
+  Vl.new()
+  |> Vl.data_from_series(
+    x: for(w <- uvspec_wl, do: w + 0.000),
+    y: Nx.to_flat_list(benzene_scaled_spec)
+  )
+  |> Vl.transform(filter: [field: "x", range: plot_range])
+  |> Vl.mark(:line, clip: true, opacity: 0.3, tooltip: "Benzene'")
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: "Benzene'"),
+  Vl.new()
+  |> Vl.data_from_series(
+    x: naphthalene_wl,
+    y: Nx.to_flat_list(naphthalene_scaled)
+  )
+  |> Vl.transform(filter: [field: "x", range: plot_range])
+  |> Vl.mark(:line, clip: true, opacity: 0.3, tooltip: "Naphthalene")
+  |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  |> Vl.encode_field(:y, "y", type: :quantitative, scale: [zero: false])
+  |> Vl.encode(:color, type: :nominal, datum: "Naphthalene")
+  # Vl.new()
+  # |> Vl.data_from_series(
+  #   x: toluene_wl,
+  #   y: Nx.to_flat_list(toluene_scaled)
+  # )
+  # |> Vl.transform(filter: [field: "x", range: plot_range])
+  # |> Vl.mark(:line, clip: true, opacity: 0.3, tooltip: "Toluene")
+  # |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: plot_range])
+  # # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
+  # |> Vl.encode_field(:y, "y", type: :quantitative, scale: [zero: false])
+  # |> Vl.encode(:color, type: :nominal, datum: "Toluene")
+])
+```
