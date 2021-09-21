@@ -416,7 +416,8 @@ and therefore
 $$
 n = \frac{\beta}{l}
 $$
-Knowing the number concentration $n$, and molecular mass $m$ we can compute mass concentration $\rho$ by
+Knowing the number concentration $n$, 
+and molecular mass $m$, we can compute mass concentration $\rho$ by
 $$
 \rho = \frac{n \cdot m}{\textrm{N}_\textrm{A}}
 $$
@@ -533,7 +534,9 @@ benzene_conc =
   for conc <- concentrations, into: [] do
     Keyword.get(conc, :benzene, 0.0)
   end
+```
 
+```elixir
 Vl.new(width: 700, height: 400)
 |> Vl.data_from_series(
   x: Enum.to_list(1..1440),
@@ -545,9 +548,10 @@ Vl.new(width: 700, height: 400)
 # |> Vl.mark(:circle)
 |> Vl.encode(:size, value: 4)
 |> Vl.repeat(
-  [layer: ["so2", "ozone", "naphthalene", "benzene"]],
+  [layer: ["so2", "ozone", "benzene", "naphthalene"]],
   Vl.new()
-  |> Vl.mark(:line, clip: true)
+  # |> Vl.mark(:circle, clip: true, size: 10, opacity: 0.5)
+  |> Vl.mark(:line, clip: true, size: 1)
   |> Vl.encode_field(:x, "x", type: :quantitative)
   # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
   |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false])
