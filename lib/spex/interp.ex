@@ -7,9 +7,10 @@ defmodule Spex.Interp do
   # @defn_compiler EXLA
 
   @doc """
-  Search in a list/array for data for first index where predicate is false
+  Search in a list/array for data for first index where predicate is false.
 
-  only really useful for arrays like `Nx.Tensor` to stay O(log n).
+  Assumes that the predicate behaves monotonically.
+  Only really useful for arrays like `Nx.Tensor` to stay O(log n).
   """
   def binsearch_pred(data, fun) do
     {len} = Nx.shape(data)
