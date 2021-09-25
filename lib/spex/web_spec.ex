@@ -84,7 +84,7 @@ defmodule Spex.WebSpec do
     cache_dir = "uvspec_cache"
     File.mkdir(cache_dir)
 
-    Logger.info("getting data from #{url}...")
+    # Logger.info("getting data from #{url}...")
 
     data =
       for file <- files do
@@ -93,5 +93,33 @@ defmodule Spex.WebSpec do
 
     Logger.info("getting data from #{url} complete!")
     data
+  end
+
+  @doc """
+  Get spectrometer samples from given URL.
+  """
+  def get_uvspec_samples(data_url) do
+    uvspec_samples = Spex.WebSpec.get_uvspec_data_files(data_url)
+
+    # get wavelength info from first sample (all samples should be the same)
+    [%{"Wavelengths" => uvspec_wl_json} | _] = uvspec_samples
+    uvspec_wl = Jason.decode!("[#{uvspec_wl_json}]")
+
+    # get timestamps
+    timestamps =
+      for sample <- uvspec_samples do
+        {:ok, date, _} = DateTime.from_iso8601(sample["utc_timestamp"])
+        date
+      end
+
+    # get sample data
+    signals =
+      for sample <- uvspec_samples do
+        y = Jason.decode!("[#{sample["Signals"]}]")
+        y
+      end
+
+      %{wavelengths: uvspec_wl, timestamps: timestamps, signals: signals}
+
   end
 end
