@@ -1,6 +1,9 @@
 defmodule Spex.Utils do
 	require Nx
 
+  import Nx.Defn
+  # @default_defn_compiler EXLA
+
 
 
 	@doc """
@@ -41,7 +44,7 @@ defmodule Spex.Utils do
   """
   def slope_regression(signal, ref_signal, wl, regressors, opts \\ []) do
     wlmin = Keyword.get(opts, :wlmin, 220)
-    wlmax = Keyword.get(opts, :wlmax, 310)
+    wlmax = Keyword.get(opts, :wlmax, 360)
     imax = Enum.count(wl, fn x -> x < wlmax end)
     imin = Enum.count(wl, fn x -> x < wlmin end)
     regd_range = imin..(imax-2)
@@ -71,7 +74,7 @@ defmodule Spex.Utils do
   """
   def value_regression(signal, ref_signal, wl, regressors, opts \\ []) do
     wlmin = Keyword.get(opts, :wlmin, 220)
-    wlmax = Keyword.get(opts, :wlmax, 310)
+    wlmax = Keyword.get(opts, :wlmax, 360)
     imax = Enum.count(wl, fn x -> x < wlmax end)
     imin = Enum.count(wl, fn x -> x < wlmin end)
     reg_range = imin..(imax-1)
@@ -82,5 +85,43 @@ defmodule Spex.Utils do
     x = x[reg_range] 
     {x, Spex.Regression.linreg(x,y)}
   end
+
+  @doc """
+  cumulative sum over `axis`, default is axis 0.
+  """
+  def cumsum(a, opts \\ []) do
+    axis = Keyword.get(opts, :axis, 0)
+    as = Nx.shape(a)
+    n = elem(as, axis)
+    case n do
+      1 -> a
+      n ->
+        # FIXME: defn impl does not work yet
+        # cumsumn(a, Nx.tensor(Tuple.to_list(as)), axis, n)
+        acc = Nx.slice(a, Tuple.to_list(put_elem(as, axis, 0)), Tuple.to_list(put_elem(as, axis, 1)))
+        {result, _acc} = for i <- 2..n, reduce: {acc, acc} do
+          {dst, acc} ->
+           src = Nx.slice(a, Tuple.to_list(put_elem(as, axis, i-1)), Tuple.to_list(put_elem(as, axis, 1)))
+           acc = Nx.add(acc, src)
+           {Nx.concatenate([dst, acc], axis: axis), acc}
+        end
+        result  
+    end
+  end
+
+  # defnp cumsumn(a, as, axis, n) do
+  #   shape0 = Nx.put_slice(as, [axis], 0)
+  #   shape1 = Nx.put_slice(as, [axis], 1)
+  #   acc = Nx.slice(a, shape0, shape1)
+  #   {result, _acc} = for i <- 2..n, reduce: {acc, acc} do
+  #     {dst, acc} ->
+  #       shapei = Nx.put_slice(as, [axis], i-1)
+  #      src = Nx.slice(a, shapei, shape1)
+  #      acc = Nx.add(acc, src)
+  #      {Nx.concatenate([dst, acc], axis: axis), acc}
+  #   end
+  #   result  
+  # end
+
 
 end
