@@ -158,7 +158,12 @@ uvspec_wl = [
   351.2116, 351.3898, 351.568, 351.7462, 351.9243, 352.1025, 352.2806, 352.4587, 352.6368, 
   352.8148, 352.9929, 353.1709, 353.3489, 353.5268, 353.7048, 353.8828, 354.0607, 354.2386, 
   354.4165, 354.5943, 354.7722, 354.95, 355.1278, 355.3056, 355.4833, 355.6611, 355.8388, 
-  356.0165, 356.1942, 356.3719, 356.5495, 356.7271, 356.9047, 357.0823, 357.2599, 357.4374, 357.6149, 357.7924, 357.9699, 358.1474, 358.3248, 358.5023, 358.6797, 358.8571, 359.0344, 359.2118, 359.3891, 359.5664, 359.7437, 359.9209, 360.0982, 360.2754, 360.4526, 360.6298, 360.807, 360.9841, 361.1613, 361.3383, 361.5154, 361.6925, 361.8695, 362.0466, 362.2236, 362.4005, 362.5775, 362.7545, 362.9314, 363.1083, 363.2852, 363.462, 363.6389, 363.8157, 363.9925, 364.1693, 364.346, 364.5228, 364.6996, 364.8762, 365.0529, 365.2296, 365.4062, 365.5829, 365.7595, 365.9361, 366.1126, 366.2892, 366.4657, 366.6422, 366.8186, 366.9951, 367.1716, 367.348, 367.5244, 367.7008, 367.8772, 368.0535, 368.2298, 368.4061, 368.5824, 368.7586, 368.9349, 369.1111, 369.2873, 369.4635, 369.6396, 369.8158, 369.9919, 370.168, 370.3441, 370.5202, 370.6962, 370.8722, 371.0482, 371.2242, 371.4002, 371.5761, 371.752, 371.9279, 372.1038, 372.2796, 372.4555, 372.6313, 372.8071, 372.9829, 373.1586, 373.3344, 373.5101, 373.6858, 373.8615, 374.0371, 374.2127, 374.3884, 374.564, 374.7395, 374.9151, 375.0906, 375.2661, 375.4416, 375.6171, 375.7925, 375.968, 376.1434, 376.3188, 376.4941, 376.6695, 376.8448, 377.0201, 377.1954, 377.3707, 377.5459, 377.7212, 377.8964, 378.0715, 378.2467, 378.4218, 378.597, 378.7721, 378.9472, 379.1222, 379.2973, 379.4723, 379.6473, 379.8223, 379.9972, 380.1722, 380.3471, 380.522, 380.6969, 380.8717, 381.0466, 381.2214, 381.3962, 381.571, 381.7457, 381.9204, 382.0952, 382.2699, 382.4445, 382.6192, 382.7938, 382.9685, 383.1431, 383.3176, 383.4922, 383.6667, 383.8412, 384.0157, 384.1902, 384.3646, 384.5391, 384.7134, 384.8878, 385.0622, 385.2365, 385.4109, 385.5852, 385.7594, 385.9337, 386.1079, 386.2822, 386.4564, 386.6306, 386.8047, 386.9789, 387.153, 387.3271, 387.5012, 387.6752, 387.8492, 388.0233, 388.1972, 388.3712, 388.5452, 388.7191, 388.893, 389.0669, 389.2408, 389.4146, 389.5884, 389.7623, 389.9361, 390.1098, 390.2835, 390.4573, 390.631, 390.8047, 390.9784, 391.152, 391.3256, 391.4992, 391.6728, 391.8464, 392.0199, 392.1934, 392.3669, 392.5403, 392.7138, 392.8873, 393.0607, 393.2341, 393.4074, 393.5808, 393.7542, 393.9274, 394.1007, 394.274, 394.4472, 394.6205, 394.7937, 394.9668, 395.14, 395.3131, 395.4863, 395.6594, 395.8325, 396.0055, 396.1786, 396.3516, 396.5246, 396.6975, 396.8705, 397.0434, 397.2163, 397.3892, 397.5621, 397.735, 397.9077, 398.0806, 398.2534, 398.4261, 398.5989, 398.7716, 398.9443, 399.117, 399.2896, 399.4623, 399.6349, 399.8075, 399.9801, 400.1526, 400.3252, 400.4977, 400.6702, 400.8427, 401.0151, 401.1875, 401.36, 401.5323, 401.7047, 401.877, 402.0494, 402.2216, 402.394, 402.5662, 402.7385, 402.9107, 403.0829, 403.2551, 403.4272, 403.5994, 403.7715, 403.9436, 404.1156
+  356.0165, 356.1942, 356.3719, 356.5495, 356.7271, 356.9047, 357.0823, 357.2599, 357.4374, 
+  357.6149, 357.7924, 357.9699, 358.1474, 358.3248, 358.5023, 358.6797, 358.8571, 359.0344, 
+  359.2118, 359.3891, 359.5664, 359.7437, 359.9209, 360.0982, 360.2754, 360.4526, 360.6298, 
+  360.807, 360.9841, 361.1613, 361.3383, 361.5154, 361.6925, 361.8695, 362.0466, 362.2236, 
+  
+  362.4005, 362.5775, 362.7545, 362.9314, 363.1083, 363.2852, 363.462, 363.6389, 363.8157, 363.9925, 364.1693, 364.346, 364.5228, 364.6996, 364.8762, 365.0529, 365.2296, 365.4062, 365.5829, 365.7595, 365.9361, 366.1126, 366.2892, 366.4657, 366.6422, 366.8186, 366.9951, 367.1716, 367.348, 367.5244, 367.7008, 367.8772, 368.0535, 368.2298, 368.4061, 368.5824, 368.7586, 368.9349, 369.1111, 369.2873, 369.4635, 369.6396, 369.8158, 369.9919, 370.168, 370.3441, 370.5202, 370.6962, 370.8722, 371.0482, 371.2242, 371.4002, 371.5761, 371.752, 371.9279, 372.1038, 372.2796, 372.4555, 372.6313, 372.8071, 372.9829, 373.1586, 373.3344, 373.5101, 373.6858, 373.8615, 374.0371, 374.2127, 374.3884, 374.564, 374.7395, 374.9151, 375.0906, 375.2661, 375.4416, 375.6171, 375.7925, 375.968, 376.1434, 376.3188, 376.4941, 376.6695, 376.8448, 377.0201, 377.1954, 377.3707, 377.5459, 377.7212, 377.8964, 378.0715, 378.2467, 378.4218, 378.597, 378.7721, 378.9472, 379.1222, 379.2973, 379.4723, 379.6473, 379.8223, 379.9972, 380.1722, 380.3471, 380.522, 380.6969, 380.8717, 381.0466, 381.2214, 381.3962, 381.571, 381.7457, 381.9204, 382.0952, 382.2699, 382.4445, 382.6192, 382.7938, 382.9685, 383.1431, 383.3176, 383.4922, 383.6667, 383.8412, 384.0157, 384.1902, 384.3646, 384.5391, 384.7134, 384.8878, 385.0622, 385.2365, 385.4109, 385.5852, 385.7594, 385.9337, 386.1079, 386.2822, 386.4564, 386.6306, 386.8047, 386.9789, 387.153, 387.3271, 387.5012, 387.6752, 387.8492, 388.0233, 388.1972, 388.3712, 388.5452, 388.7191, 388.893, 389.0669, 389.2408, 389.4146, 389.5884, 389.7623, 389.9361, 390.1098, 390.2835, 390.4573, 390.631, 390.8047, 390.9784, 391.152, 391.3256, 391.4992, 391.6728, 391.8464, 392.0199, 392.1934, 392.3669, 392.5403, 392.7138, 392.8873, 393.0607, 393.2341, 393.4074, 393.5808, 393.7542, 393.9274, 394.1007, 394.274, 394.4472, 394.6205, 394.7937, 394.9668, 395.14, 395.3131, 395.4863, 395.6594, 395.8325, 396.0055, 396.1786, 396.3516, 396.5246, 396.6975, 396.8705, 397.0434, 397.2163, 397.3892, 397.5621, 397.735, 397.9077, 398.0806, 398.2534, 398.4261, 398.5989, 398.7716, 398.9443, 399.117, 399.2896, 399.4623, 399.6349, 399.8075, 399.9801, 400.1526, 400.3252, 400.4977, 400.6702, 400.8427, 401.0151, 401.1875, 401.36, 401.5323, 401.7047, 401.877, 402.0494, 402.2216, 402.394, 402.5662, 402.7385, 402.9107, 403.0829, 403.2551, 403.4272, 403.5994, 403.7715, 403.9436, 404.1156
 ]
 
 
@@ -177,16 +182,30 @@ uvspec_wl = [
 ```elixir
 refdata_path = "../spex/reference-data"
 
+uv_references = Spex.RefSpec.load_uvspec_references() 
+|> Spex.RefSpec.remap_references(uvspec_wl)
+
+
 %{
   naphthalene: naphthalene,
   benzene: benzene,
   so2: so2,
-  o3: o3,
+  ozone: o3,
   no2: no2,
   formaldehyde: formaldehyde,
   phenol: phenol,
   toluene: toluene,
-} = Spex.RefSpec.load_uvspec_references()
+} = uv_references
+
+# Spex.RefSpec.remap_references()
+uv_references = Map.to_list(uv_references)
+
+# uv_references = for {name, ref} <- uv_references, name not in [:benzene, :formaldehyde, :phenol, :toluene] do
+#   {name, ref}
+# end
+# uv_references = for {name, ref} <- uv_references, name not in [:benzene, :naphthalene, :formaldehyde, :phenol, :no2, :toluene] do
+#   {name, ref}
+# end
 
 {naphthalene_wl, naphthalene_norm} = Mainz.to_norm_spectrum(naphthalene)
 
@@ -220,7 +239,7 @@ benzene_norm_spec =
 {toluene_wl, toluene_norm} = Hitran.to_norm_spectrum(toluene)
 
 # SMA.plotxy(so2_wl, Nx.to_flat_list(so2_norm))
-SMA.plotxy(phenol_wl, Nx.to_flat_list(phenol_norm))
+SMA.plotxy(toluene_wl, Nx.to_flat_list(toluene_norm))
 ```
 
 ```elixir
@@ -233,8 +252,10 @@ wl_shifted = for wl <- benzene.spectrum.wavelength, do: wl + 0.125
 benzene = put_in(benzene.spectrum.wavelength, wl_shifted)
 
 # smooth benzene spikes, with a [1,2,1] kernel a few times
-att_smoothed = Nx.to_flat_list(Spex.Convolve.smooth(Nx.tensor(benzene.spectrum.attenuation), 5))
+# att_smoothed = Nx.to_flat_list(Spex.Gauss.smooth(Nx.tensor(benzene.spectrum.attenuation), 5))
+att_smoothed = Nx.to_flat_list(Spex.Gauss.smooth(Nx.tensor(benzene.spectrum.attenuation), 5))
 benzene = put_in(benzene.spectrum.attenuation, att_smoothed)
+# uv_references = Keyword.replace!(uv_references, :benzene, benzene)
 ```
 
 ```elixir
@@ -248,6 +269,117 @@ positive_slope = %{
     attenuation: for(wl <- uvspec_wl, do: (wl - wl0) * slope)
   }
 }
+
+defmodule SpecPlot do
+  def plot_references(refs, ref_wl) do
+    [wlmin, wlmax] = [Enum.min(ref_wl), Enum.max(ref_wl)]
+
+    ref_list = Enum.with_index(refs)
+
+    factors =
+      for {{_name, reference = %{spectrum: %{attenuation: attenuation, wavelength: wl}}}, _i} <-
+            ref_list do
+        reg_range = Spex.Utils.in_range(wl, wlmin, wlmax)
+        attenuation = Enum.slice(attenuation, reg_range)
+        Enum.max(attenuation)
+      end
+
+    colors = [
+      "blue",
+      "purple",
+      "red",
+      "orange",
+      "brown",
+      "green",
+      "cyan",
+      "blue",
+      "black",
+      "gray"
+    ]
+
+    layers =
+      for {{name, %{spectrum: %{attenuation: attenuation, wavelength: wl}}}, i} <- ref_list do
+        f = Enum.at(factors, i)
+
+        attenuation = for y <- attenuation, do: y / f
+
+        Vl.new()
+        |> Vl.data_from_series(x: wl, y: attenuation)
+        |> Vl.mark(:line, clip: true, tooltip: true)
+        |> Vl.encode(:size, value: 1.0)
+        |> Vl.encode(:color, value: Enum.at(colors, i), type: :ordinal, legend: [title: "#{name}"])
+        |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [wlmin, wlmax]])
+        # |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [230, 300]])
+        |> Vl.encode_field(:y, "y",
+          type: :quantitative,
+          title: "#{name}",
+          scale: [domain: [0.0, 1.0]]
+        )
+
+        # Enum.count(x)
+      end
+
+    Vl.new(width: 700, height: 400)
+    |> Vl.layers(layers)
+  end
+end
+
+plot_names = [:benzene, :ozone]
+
+# refs = for name <- plot_names, into: %{}, do: {name, uv_references[name]}
+
+refs =
+  for {name, val} <- uv_references,
+      name in plot_names,
+      do: {name, val}
+
+# refs
+SpecPlot.plot_references(refs, uvspec_wl)
+```
+
+```elixir
+alias Spex.RefSpec, as: RefSpec
+
+defmodule Gauss do
+  def plot_pyramid(pyramid, wl) do
+    colors = ["blue", "purple", "red", "orange", "yellow", "green", "cyan", "blue", "black"]
+
+    layers =
+      for {y, i} <- Enum.with_index(pyramid) do
+        flaty = Nx.to_flat_list(y)
+        n = Enum.count(flaty)
+        stride = Integer.pow(2, i)
+
+        x = for j <- 1..n, do: Enum.at(wl, (j - 1) * stride + div(stride, 2), 0.0)
+
+        Vl.new()
+        |> Vl.data_from_series(x: x, y: flaty)
+        |> Vl.mark(:line, clip: true)
+        |> Vl.encode(:size, value: 1.0)
+        |> Vl.encode(:color, value: Enum.at(colors, i), type: :ordinal, legend: [title: "#{i}"])
+        |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [210, 310]])
+        |> Vl.encode_field(:y, "y", type: :quantitative, title: "#{i}")
+
+        # Enum.count(x)
+      end
+
+    Vl.new(width: 700, height: 400)
+    |> Vl.layers(layers)
+  end
+end
+
+benzene_regressor = RefSpec.regressor(benzene, uvspec_wl)
+# o3_regressor = RefSpec.regressor(o3, uvspec_wl)
+# toluene_regressor = RefSpec.regressor(toluene, uvspec_wl)
+
+benzene_n1 = Spex.Gauss.smooth(benzene_regressor, 3)
+pyramid = Spex.Gauss.dog_pyramid_1d(benzene_regressor, 8)
+pyramid |> Gauss.plot_pyramid(uvspec_wl)
+
+# SMA.plotxy(
+#   for({x,i} <- Enum.with_index(uvspec_wl), rem(i, 2) == 0, do: x), 
+#   Nx.to_flat_list(Enum.at(pyramid, 1)))
+# Gauss.plot_pyramid(pyramid)
 ```
 
 ```elixir
@@ -255,19 +387,18 @@ positive_slope = %{
 
 alias Spex.RefSpec, as: RefSpec
 
-benzene_regressor = RefSpec.regressor(benzene, uvspec_wl)
-o3_regressor = RefSpec.regressor(o3, uvspec_wl)
-toluene_regressor = RefSpec.regressor(toluene, uvspec_wl)
-SMA.plotxy(uvspec_wl, Nx.to_flat_list(toluene_regressor))
-
 # need to find a better toluene reference, as ours only goes to 277nm
-refspectra = [benzene, o3, toluene, naphthalene, so2, no2, formaldehyde, phenol, positive_slope]
-refnames = [:benzene, :ozone, :toluene, :naphthalene, :so2, :no2, :formaldehyde, :phenol, :slope]
+# refspectra = [benzene, o3, toluene, naphthalene, so2, no2, formaldehyde, phenol, positive_slope]
+refnames =
+  for {name, _} <- uv_references, into: [] do
+    name
+  end
+  |> Enum.sort()
+
+refspectra = for name <- refnames, do: uv_references[name]
 regressors = for spec <- refspectra, do: RefSpec.regressor(spec, uvspec_wl)
 # RefSpec.minmax_wavelengths_all(refspectra)
 # for spec <- refspectra, do: Enum.max(spec.spectrum.wavelength)
-
-nil
 ```
 
 Relevant dates:
@@ -275,7 +406,7 @@ Relevant dates:
 * 2021-07-14 large spike around midnight
 * 2021-08-21/22 large event at night
 
-<!-- livebook:{"livebook_object":"cell_input","name":"uvspec_date","reactive":true,"type":"text","value":"2021-07-14"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"uvspec_date","reactive":true,"type":"text","value":"2021-07-15"} -->
 
 ```elixir
 # construct iso860 string from date
@@ -469,7 +600,8 @@ $$
 \rho = \frac{n \cdot m}{\textrm{N}_\textrm{A}}
 $$
 
-https://www2.dmu.dk/AtmosphericEnvironment/Expost/database/docs/PPM_conversion.pdf
+getting to a ppb value under standard atmospheric conditions is just 
+[a short step away](https://www2.dmu.dk/AtmosphericEnvironment/Expost/database/docs/PPM_conversion.pdf).
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -479,7 +611,12 @@ $$
 
 <!-- livebook:{"break_markdown":true} -->
 
+#### Ridge Regression
 
+Ridge regression does not help, as as our problem is not one of outliers, 
+but that discrepancies in low-frequency parts of the model cause the regression to
+try to pull up high-frequency regressors to smooth out those bumps,
+which ultimately does not result in a plausible fit.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -493,15 +630,105 @@ to a faithful representation of the observed signal.
 
 Differentiating the signal over the spectrum, 
 and doing a regression on that, seems to work consistently for compounds
-that have strong high-frequency components (SO2, NO, Benzene, Naphthalene), 
+that have strong high-frequency components (SO2, NO, Naphthalene, BTEX), 
 but it does not work for spectra that are dominated by lower-frequency components.
 
 It seems like a tiered bandpass approach could reconstruct the components.
+
+<!-- livebook:{"break_markdown":true} -->
+
+#### Incremental Regression with Gaussian Pyramids
+
+Gaussian pyramids are used in computer vision for feature detection, 
+and it seems like they are a good fit here, too.
+
+The source signal is blurred in steps, and at each step the difference-of-gaussians (DoG)
+is computed, which approximates a bandpass filtered version of the spectrum.
+
+Starting from the highest frequency, we can perform a regression on the signal, 
+but remove the regressed components from the signal before continuing to the next step. 
+This way, as we approach lower frequencies, 
+we can incrementally sum the regression parameters.
 
 <!-- livebook:{"disable_formatting":true} -->
 
 ```elixir
 defmodule Test do
+
+
+  def pyramid_regression(signal, ref_signal, regressors, opts \\ []) do
+    levels = Keyword.get(opts, :levels, 5)
+    # reverse = Keyword.get(opts, :reverse_pyramid, false)
+    cut_residual = Keyword.get(opts, :cut_pyramid_residual, false)
+    last_index = if cut_residual do -2 else -1 end
+
+    y = Spex.Utils.signal_to_attenuation(signal, ref_signal)
+
+    reg_pyramids = for reg <- regressors do 
+      Spex.Gauss.dog_pyramid_1d(reg, levels)  |> Enum.slice(0..last_index//1)
+    end |> Enum.zip()
+    reg_pyramids = for tuple <- reg_pyramids do
+      Tuple.to_list(tuple) 
+    end
+
+    # IO.puts("reg_pyramids=#{inspect(for(p <- reg_pyramids, do: Enum.count(p)))}")
+
+    y_pyramid = Spex.Gauss.dog_pyramid_1d(y, levels) |> Enum.slice(0..last_index//1)
+
+    b = Nx.broadcast(0.0, {Enum.count(regressors)+1})
+    b = pyramid_reg_iter(y_pyramid, reg_pyramids, b, opts)
+
+    {n} = Nx.shape(y)
+    ones = Nx.tensor([for(_i <- 1..n, do: 1.0e0)])
+    x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
+
+    {x, b}
+  end
+
+  defp pyramid_reg_iter([], _reg_pyramids, b, _opts), do: b
+  defp pyramid_reg_iter(y_pyramid, reg_pyramids, b, opts) do
+    # IO.puts("pyramid_reg_iter(#{inspect({reg_pyramids})})")
+    # reverse = Keyword.get(opts, :reverse_pyramid, false)
+
+    [y | rem_y_pyramid] = y_pyramid
+
+    [regressors | rem_reg_pyramids] = reg_pyramids
+
+    {n} = Nx.shape(y)
+
+    ones = Nx.tensor([for(_i <- 1..n, do: 1.0e0)])
+    x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
+
+    b_reg = Spex.Regression.linreg(x,y)
+
+
+    # remove signal part from all subsequent pyramid levels
+    rem_y_pyramid = for {yp, i} <- Enum.with_index(rem_y_pyramid) do
+      # IO.puts("pyramid_reg_iter(#{inspect({i, yp})})")
+
+      pregressors = Enum.at(rem_reg_pyramids, i)
+
+
+      {np} = Nx.shape(yp)
+
+      ones = Nx.tensor([for(_i <- 1..np, do: 1.0e0)])
+      xp = Nx.concatenate([ones | pregressors], axis: 0) |> Nx.transpose()
+  
+      # IO.puts("pyramid_reg_iter(#{inspect({i, xp})})")
+
+      yp_mod = Nx.dot(xp, b_reg)
+      Nx.subtract(yp, yp_mod)
+    end
+
+    b = Nx.add(b, b_reg)
+
+    # {x, b)
+
+    pyramid_reg_iter(rem_y_pyramid, rem_reg_pyramids, b, opts)
+
+  end
+
+
   @doc """
   return concentration in ug/m^3 for regression results
   `beta` is a tensor with one more entry than refnames 
@@ -522,17 +749,7 @@ defmodule Test do
 
     na = 6.02214076e23
     # g/mol
-    molecular_masses = %{
-      benzene: 78.114,
-      ozone: 47.997,
-      toluene: 92.141,
-      naphthalene: 128.174,
-      so2: 64.066,
-      no2: 46.006,
-      formaldehyde: 30.026,
-      phenol: 94.113,
-      slope: 1.0,
-    }
+    molecular_masses = Spex.RefSpec.molecular_masses()
 
     for {i, name} <- Enum.zip([Enum.to_list(1..Enum.count(refnames)), refnames]) do
       b = beta[i] |> Nx.to_scalar()
@@ -545,26 +762,51 @@ defmodule Test do
     end
   end
 
+  def pmap(collection, func) do
+    collection
+    |> Enum.map(&(Task.async(fn -> func.(&1) end)))
+    |> Enum.map(&(Task.await(&1, :infinity)))
+  end
+
   def compute_concentration(signal, ref_signal, wl, regressors, refnames, opts \\ []) do
-    wlmin = Keyword.get(opts, :wlmin, 220)
-    wlmax = Keyword.get(opts, :wlmax, 360)
 
-    {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, wlmin: wlmin, wlmax: wlmax)
+    {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, opts)
+    # {x, b} = pyramid_regression(
+    #   signal, 
+    #   ref_signal, 
+    #   regressors,
+    #   cut_pyramid_residual: true, 
+    #   levels: 2
+    # )
 
-    reg_range = Spex.Utils.in_range(wl, wlmin, wlmax)
 
-    y = Spex.Utils.signal_to_attenuation(signal, ref_signal)[reg_range]
+    y = Spex.Utils.signal_to_attenuation(signal, ref_signal)
 
     y_reg = Nx.dot(x, b)
 
-    [y_modeled: y_reg, y_source: y, beta: b] ++ attenuation_to_concentration(b, refnames, opts)
+    [y_modeled: y_reg, y_source: y, x: x, beta: b] ++ attenuation_to_concentration(b, refnames, opts)
   end
 
   def compute_all_concentrations(signals, ref_signal, wl, regressors, refnames, opts) do
+    wlmin = Keyword.get(opts, :wlmin, 220)
+    wlmax = Keyword.get(opts, :wlmax, 360)
+    reg_range = Spex.Utils.in_range(wl, wlmin, wlmax)
+    wl = Enum.slice(wl, reg_range)
+
+    ref_signal = ref_signal[reg_range]
+    regressors = for reg <- regressors do 
+      reg[0][reg_range] |> Nx.reshape({1,Enum.count(reg_range)})
+    end
+
     nsignals = elem(Nx.shape(signals), 0)
 
-    for i <- 1..nsignals do
-      signal = signals[i - 1]
+    signal_list = for i <- 1..nsignals, do: signals[i - 1][reg_range]
+
+    # pmap(signal_list, fn signal -> 
+    #   compute_concentration(signal, ref_signal, wl, regressors, refnames, opts) 
+    # end)
+
+    for signal <- signal_list do
       compute_concentration(signal, ref_signal, wl, regressors, refnames, opts)
     end
   end
@@ -574,12 +816,16 @@ end
 ```elixir
 a = Nx.tensor([[1.0, 2, 3, 4, 5]]) |> Nx.transpose()
 Spex.Utils.cumsum(a, axis: 0)
+[head | tail] = [1, 3]
+tail
+
+Enum.to_list(0..0//1)
 ```
 
 ```elixir
 # trim signal to regressor range
 {wlmin, wlmax} = RefSpec.minmax_wavelengths_all(refspectra)
-wlmin = 220.0
+wlmin = 210.0
 wlmax = 360.0
 reg_range = Spex.Utils.in_range(uvspec_wl, wlmin, wlmax)
 
@@ -592,7 +838,7 @@ reg_range = Spex.Utils.in_range(uvspec_wl, wlmin, wlmax)
 ref_signal = Nx.reduce_max(minute_signal_tensor, axes: [:time])
 # ref_signal = Nx.mean(minute_signal_tensor, axes: [:time])
 
-concentrations =
+betas =
   Test.compute_all_concentrations(
     minute_signal_tensor,
     ref_signal,
@@ -603,40 +849,50 @@ concentrations =
     wlmax: wlmax
   )
 
-so2_conc =
-  for conc <- concentrations, into: [] do
-    Keyword.get(conc, :so2, 0.0)
+concentrations =
+  for {name, _} <- uv_references, into: [] do
+    x =
+      for s <- betas, into: [] do
+        Keyword.get(s, name, 0.0)
+      end
+
+    {name, x}
   end
 
-ozone_conc =
-  for conc <- concentrations, into: [] do
-    Keyword.get(conc, :ozone, 0.0)
-  end
+# so2_conc =
+#   for conc <- concentrations, into: [] do
+#     Keyword.get(conc, :so2, 0.0)
+#   end
 
-naphthalene_conc =
-  for conc <- concentrations, into: [] do
-    Keyword.get(conc, :naphthalene, 0.0)
-  end
+# ozone_conc =
+#   for conc <- concentrations, into: [] do
+#     Keyword.get(conc, :ozone, 0.0)
+#   end
 
-benzene_conc =
-  for conc <- concentrations, into: [] do
-    Keyword.get(conc, :benzene, 0.0)
-  end
+# naphthalene_conc =
+#   for conc <- concentrations, into: [] do
+#     Keyword.get(conc, :naphthalene, 0.0)
+#   end
 
-no2_conc =
-  for conc <- concentrations, into: [] do
-    Keyword.get(conc, :no2, 0.0)
-  end
+# benzene_conc =
+#   for conc <- concentrations, into: [] do
+#     Keyword.get(conc, :benzene, 0.0)
+#   end
 
-formaldehyde_conc =
-  for conc <- concentrations, into: [] do
-    Keyword.get(conc, :formdaldehyde, 0.0)
-  end
+# no2_conc =
+#   for conc <- concentrations, into: [] do
+#     Keyword.get(conc, :no2, 0.0)
+#   end
 
-phenol_conc =
-  for conc <- concentrations, into: [] do
-    Keyword.get(conc, :phenol, 0.0)
-  end
+# formaldehyde_conc =
+#   for conc <- concentrations, into: [] do
+#     Keyword.get(conc, :formdaldehyde, 0.0)
+#   end
+
+# phenol_conc =
+#   for conc <- concentrations, into: [] do
+#     Keyword.get(conc, :phenol, 0.0)
+#   end
 
 nil
 ```
@@ -644,29 +900,29 @@ nil
 ```elixir
 Vl.new(width: 700, height: 400, title: "Pollutant concentration over time")
 |> Vl.data_from_series(
-  # x: for(ts <- timestamps, do: DateTime.to_iso8601(ts)),
-  x: Enum.to_list(1..Enum.count(timestamps)),
-  so2: so2_conc,
-  no2: no2_conc,
-  ozone: ozone_conc,
-  naphthalene: naphthalene_conc,
-  benzene: benzene_conc,
-  formaldehyde: formaldehyde_conc,
-  phenol: phenol_conc
+  [
+    x: for(ts <- timestamps, do: DateTime.to_iso8601(ts))
+    # x: Enum.to_list(1..Enum.count(timestamps)),
+  ] ++ concentrations
 )
 # |> Vl.mark(:circle)
 |> Vl.encode(:size, value: 4)
 |> Vl.repeat(
-  [layer: ["so2", "ozone", "benzene", "naphthalene", "formaldehyde", "phenol"]],
+  [layer: refnames],
   Vl.new()
   # |> Vl.mark(:circle, clip: true, size: 10, opacity: 0.5)
-  |> Vl.mark(:line, clip: true, size: 1)
+  |> Vl.mark(:line, clip: true, size: 1, tooltip: true)
+  # |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [788, Enum.count(timestamps)]], title: "Sample")
   |> Vl.encode_field(:x, "x",
-    type: :quantitative,
-    scale: [domain: [788, Enum.count(timestamps)]],
+    type: :temporal,
+    scale: [
+      domain: [
+        Enum.at(timestamps, 0) |> DateTime.to_iso8601(),
+        Enum.at(timestamps, -1) |> DateTime.to_iso8601()
+      ]
+    ],
     title: "Sample"
   )
-  # |> Vl.encode_field(:x, "x", type: :temporal, scale: [domain: [Enum.at(timestamps, 788) |> DateTime.to_iso8601(), Enum.at(timestamps, -1) |> DateTime.to_iso8601()]], title: "Sample")
   # |> Vl.encode_field(:x, "x", type: :temporal, title: "Time")
   # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
   |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false], title: "ug/m^3")
@@ -680,74 +936,77 @@ Vl.new(width: 700, height: 400, title: "Pollutant concentration over time")
 
 ```elixir
 y_sources =
-  for conc <- concentrations, into: [] do
+  for conc <- betas, into: [] do
     Keyword.get(conc, :y_source, 0.0)
   end
 
 y_models =
-  for conc <- concentrations, into: [] do
+  for conc <- betas, into: [] do
     Keyword.get(conc, :y_modeled, 0.0)
   end
 
+xs =
+  for conc <- betas, into: [] do
+    Keyword.get(conc, :x, 0.0)
+  end
+
 betas =
-  for conc <- concentrations, into: [] do
+  for conc <- betas, into: [] do
     Keyword.get(conc, :beta, 0.0)
   end
 
 nil
 ```
 
-<!-- livebook:{"livebook_object":"cell_input","name":"plot_sample","reactive":true,"type":"number","value":"0"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"plot_sample","reactive":true,"type":"number","value":"9"} -->
 
 ```elixir
 {plot_sample, "\n"} = IO.gets("plot_sample") |> Integer.parse()
 
 y = Enum.at(y_sources, plot_sample)
-y_reg = Enum.at(y_models, plot_sample)
+# y_reg = Enum.at(y_models, plot_sample)
 b = Enum.at(betas, plot_sample)
+x = Enum.at(xs, plot_sample)
 time = Enum.at(timestamps, plot_sample)
+
+b_tuning = [1.0, 1.0, 1.0, 1.1, 0.5] |> Nx.tensor()
+
+# b = Nx.multiply(b, b_tuning)
+
+y_reg = Nx.dot(x, b)
+
+sample_concentrations =
+  for {name, i} <- Enum.with_index(refnames) do
+    bb = Nx.to_scalar(b[i + 1])
+
+    {
+      name,
+      Nx.to_flat_list(Nx.multiply(Enum.at(regressors, i)[0][reg_range], bb))
+    }
+  end
 
 Vl.new(width: 700, height: 400, title: "Regression Model at #{DateTime.to_iso8601(time)}")
 |> Vl.data_from_series(
-  x: Enum.slice(uvspec_wl, reg_range),
-  y_orig: Nx.to_flat_list(Nx.subtract(y, Nx.mean(y))),
-  y_reg: Nx.to_flat_list(Nx.subtract(y_reg, Nx.mean(y_reg))),
-  benzene:
-    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 0)[0][reg_range], 1 * Nx.to_scalar(b[1]))),
-  ozone:
-    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 1)[0][reg_range], 1 * Nx.to_scalar(b[2]))),
-  toluene:
-    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 2)[0][reg_range], 1 * Nx.to_scalar(b[3]))),
-  naphthalene:
-    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 3)[0][reg_range], 1 * Nx.to_scalar(b[4]))),
-  so2: Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 4)[0][reg_range], 1 * Nx.to_scalar(b[5]))),
-  no2: Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 5)[0][reg_range], 1 * Nx.to_scalar(b[6]))),
-  formdaldehyde:
-    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 6)[0][reg_range], 1 * Nx.to_scalar(b[7]))),
-  phenol:
-    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 7)[0][reg_range], 1 * Nx.to_scalar(b[8]))),
-  slope:
-    Nx.to_flat_list(Nx.multiply(Enum.at(regressors, 8)[0][reg_range], 1 * Nx.to_scalar(b[9])))
+  [
+    x: Enum.slice(uvspec_wl, reg_range),
+    y_orig: Nx.to_flat_list(Nx.subtract(y, Nx.mean(y))) |> Enum.slice(reg_range),
+    y_reg: Nx.to_flat_list(Nx.subtract(y_reg, Nx.mean(y_reg))) |> Enum.slice(reg_range)
+    # y_orig: Nx.to_flat_list(y) |> Enum.slice(reg_range),
+    # y_reg: Nx.to_flat_list(y_reg) |> Enum.slice(reg_range),
+  ] ++ sample_concentrations
 )
 # |> Vl.mark(:circle)
-|> Vl.encode(:size, value: 4)
+|> Vl.encode(:size, value: 2)
 |> Vl.repeat(
   [
-    layer: [
-      "y_orig",
-      "y_reg",
-      "benzene",
-      "ozone",
-      "toluene",
-      "naphthalene",
-      "so2",
-      "no2",
-      "formaldehyde",
-      "phenol"
-    ]
+    layer:
+      [
+        "y_orig",
+        "y_reg"
+      ] ++ refnames
   ],
   Vl.new()
-  |> Vl.mark(:line, clip: true)
+  |> Vl.mark(:line, clip: true, size: 1.0)
   |> Vl.encode_field(:x, "x",
     type: :quantitative,
     scale: [domain: [wlmin, wlmax]],
@@ -758,6 +1017,10 @@ Vl.new(width: 700, height: 400, title: "Regression Model at #{DateTime.to_iso860
   |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false], title: "Attenuation")
   |> Vl.encode(:color, type: :nominal, datum: [repeat: :layer])
 )
+```
+
+```elixir
+for {b, name} <- Enum.zip(Nx.to_flat_list(b[1..-1//1]), refnames), abs(b) > 1.0e3, do: {name, b}
 ```
 
 ```elixir
