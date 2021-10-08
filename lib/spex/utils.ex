@@ -67,23 +67,55 @@ defmodule Spex.Utils do
   end
 
   @doc """
+  perform a linear regression based on the slope of the signal.
+
+  Returns x,b to make it possible to reconstruct the estimated signal.
+
+  """
+  def dog_regression(signal, ref_signal, wl, regressors, opts \\ []) do
+    wlmin = Keyword.get(opts, :wlmin, 220)
+    wlmax = Keyword.get(opts, :wlmax, 360)
+    imax = Enum.count(wl, fn x -> x < wlmax end)
+    imin = Enum.count(wl, fn x -> x < wlmin end)
+    regd_range = imin..(imax-2)
+
+    y = signal_to_attenuation(signal, ref_signal)
+    yd = Nx.subtract(y, Spex.Gauss.smooth(y, 3))
+    yd = yd[regd_range]
+    regd = for(reg <- regressors, do: Nx.subtract(reg, Spex.Gauss.smooth(reg, 3)))
+    onesd = Nx.tensor([for(_i <- 1..(Enum.count(wl)), do: 1.0e-3)])
+    xd = Nx.concatenate([onesd | regd], axis: 0) |> Nx.transpose()
+    xd = xd[imin..(imax-2)] 
+
+    reg_range = imin..(imax-1)
+    ones = Nx.tensor([for(_i <- 1..Enum.count(wl), do: 0.0e-0)])
+    x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
+    x = x[reg_range] 
+
+    {x, Spex.Regression.linreg(xd,yd)}
+    # {x, Spex.Regression.ridgereg(xd,yd, 1.0e-30)}
+  end
+
+
+  @doc """
   perform a linear regression based on the value of the signal.
 
   Returns x,b to make it possible to reconstruct the estimated signal.
 
   """
   def value_regression(signal, ref_signal, wl, regressors, opts \\ []) do
-    wlmin = Keyword.get(opts, :wlmin, 220)
-    wlmax = Keyword.get(opts, :wlmax, 360)
+    wlmin = Keyword.get(opts, :wlmin, 210)
+    wlmax = Keyword.get(opts, :wlmax, 410)
     imax = Enum.count(wl, fn x -> x < wlmax end)
     imin = Enum.count(wl, fn x -> x < wlmin end)
     reg_range = imin..(imax-1)
 
     y = signal_to_attenuation(signal, ref_signal)[reg_range]
-    ones = Nx.tensor([for(_i <- 1..Enum.count(wl), do: 1.0e-1)])
+    ones = Nx.tensor([for(_i <- 1..Enum.count(wl), do: 1.0)])
     x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
     x = x[reg_range] 
-    {x, Spex.Regression.linreg(x,y)}
+    b = Spex.Regression.linreg(x,y)
+    {x, b}
   end
 
   @doc """
@@ -109,6 +141,15 @@ defmodule Spex.Utils do
     end
   end
 
+  @doc """
+  Compute H matrix for residual computation `Y-HY`.
+  """
+  def h(x) do
+    xtx = Nx.dot(Nx.transpose(x), x)
+    xtx_inv = Nx.LinAlg.invert(xtx)
+    Nx.dot(x, Nx.dot(xtx_inv, Nx.transpose(x)))
+  end
+ 
   # defnp cumsumn(a, as, axis, n) do
   #   shape0 = Nx.put_slice(as, [axis], 0)
   #   shape1 = Nx.put_slice(as, [axis], 1)
