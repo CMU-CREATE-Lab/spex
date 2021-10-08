@@ -24,7 +24,8 @@ defmodule Spex.RefSpec.Mainz do
     data =
       for line <- lines do
         for x <- line |> String.split() do
-          String.to_float(x)
+          {y, _} = Float.parse(x)
+          y
         end
       end
 
