@@ -665,7 +665,7 @@ defmodule Test do
     y = Spex.Utils.signal_to_attenuation(signal, ref_signal)
 
     reg_pyramids = for reg <- regressors do 
-      Spex.Gauss.dog_pyramid_1d(reg, levels)  |> Enum.slice(0..last_index//1)
+      Spex.Gauss.dog_pyramid_1d(reg, levels) |> Enum.slice(0..last_index//1)
     end |> Enum.zip()
     reg_pyramids = for tuple <- reg_pyramids do
       Tuple.to_list(tuple) 
@@ -679,7 +679,9 @@ defmodule Test do
     b = pyramid_reg_iter(y_pyramid, reg_pyramids, b, opts)
 
     {n} = Nx.shape(y)
-    ones = Nx.tensor([for(_i <- 1..n, do: 1.0e0)])
+    # ones = Nx.tensor([for(_i <- 1..n, do: 1.0e0)])
+    ones = Nx.broadcast(1.0, {1, n})
+
     x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
 
     {x, b}
@@ -698,20 +700,22 @@ defmodule Test do
 
     ones = Nx.tensor([for(_i <- 1..n, do: 1.0e0)])
     x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
+    # IO.puts("  x = #{inspect(x)}")
 
     b_reg = Spex.Regression.linreg(x,y)
 
 
     # remove signal part from all subsequent pyramid levels
-    rem_y_pyramid = for {yp, i} <- Enum.with_index(rem_y_pyramid) do
-      # IO.puts("pyramid_reg_iter(#{inspect({i, yp})})")
-
-      pregressors = Enum.at(rem_reg_pyramids, i)
+    rem_y_pyramid = for {yp, pregressors} <- Enum.zip(rem_y_pyramid, rem_reg_pyramids) do
+      # IO.puts("pyramid_reg_iter(#{inspect({yp, pregressors})})")
 
 
       {np} = Nx.shape(yp)
 
-      ones = Nx.tensor([for(_i <- 1..np, do: 1.0e0)])
+      # ones = Nx.tensor([for(_i <- 1..np, do: 1.0e0)])
+      ones = Nx.broadcast(1.0, {1, np})
+      # IO.puts("  ones = #{inspect(ones)}")
+
       xp = Nx.concatenate([ones | pregressors], axis: 0) |> Nx.transpose()
   
       # IO.puts("pyramid_reg_iter(#{inspect({i, xp})})")
@@ -770,18 +774,19 @@ defmodule Test do
 
   def compute_concentration(signal, ref_signal, wl, regressors, refnames, opts \\ []) do
 
-    {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, opts)
-    # {x, b} = pyramid_regression(
-    #   signal, 
-    #   ref_signal, 
-    #   regressors,
-    #   cut_pyramid_residual: true, 
-    #   levels: 2
-    # )
+    # {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, opts)
+    {x, b} = pyramid_regression(
+      signal, 
+      ref_signal, 
+      regressors,
+      cut_pyramid_residual: true, 
+      levels: 6
+    )
 
 
     y = Spex.Utils.signal_to_attenuation(signal, ref_signal)
 
+    # IO.puts("x=#{inspect(Nx.shape(x))}, b=#{inspect(Nx.shape(b))}")
     y_reg = Nx.dot(x, b)
 
     [y_modeled: y_reg, y_source: y, x: x, beta: b] ++ attenuation_to_concentration(b, refnames, opts)
@@ -840,7 +845,7 @@ ref_signal = Nx.reduce_max(minute_signal_tensor, axes: [:time])
 
 betas =
   Test.compute_all_concentrations(
-    minute_signal_tensor,
+    minute_signal_tensor[0..100],
     ref_signal,
     uvspec_wl,
     regressors,
@@ -858,41 +863,6 @@ concentrations =
 
     {name, x}
   end
-
-# so2_conc =
-#   for conc <- concentrations, into: [] do
-#     Keyword.get(conc, :so2, 0.0)
-#   end
-
-# ozone_conc =
-#   for conc <- concentrations, into: [] do
-#     Keyword.get(conc, :ozone, 0.0)
-#   end
-
-# naphthalene_conc =
-#   for conc <- concentrations, into: [] do
-#     Keyword.get(conc, :naphthalene, 0.0)
-#   end
-
-# benzene_conc =
-#   for conc <- concentrations, into: [] do
-#     Keyword.get(conc, :benzene, 0.0)
-#   end
-
-# no2_conc =
-#   for conc <- concentrations, into: [] do
-#     Keyword.get(conc, :no2, 0.0)
-#   end
-
-# formaldehyde_conc =
-#   for conc <- concentrations, into: [] do
-#     Keyword.get(conc, :formdaldehyde, 0.0)
-#   end
-
-# phenol_conc =
-#   for conc <- concentrations, into: [] do
-#     Keyword.get(conc, :phenol, 0.0)
-#   end
 
 nil
 ```
@@ -918,7 +888,7 @@ Vl.new(width: 700, height: 400, title: "Pollutant concentration over time")
     scale: [
       domain: [
         Enum.at(timestamps, 0) |> DateTime.to_iso8601(),
-        Enum.at(timestamps, -1) |> DateTime.to_iso8601()
+        Enum.at(timestamps, 100) |> DateTime.to_iso8601()
       ]
     ],
     title: "Sample"
@@ -989,10 +959,10 @@ Vl.new(width: 700, height: 400, title: "Regression Model at #{DateTime.to_iso860
 |> Vl.data_from_series(
   [
     x: Enum.slice(uvspec_wl, reg_range),
-    y_orig: Nx.to_flat_list(Nx.subtract(y, Nx.mean(y))) |> Enum.slice(reg_range),
-    y_reg: Nx.to_flat_list(Nx.subtract(y_reg, Nx.mean(y_reg))) |> Enum.slice(reg_range)
-    # y_orig: Nx.to_flat_list(y) |> Enum.slice(reg_range),
-    # y_reg: Nx.to_flat_list(y_reg) |> Enum.slice(reg_range),
+    # y_orig: Nx.to_flat_list(Nx.subtract(y, Nx.mean(y))) |> Enum.slice(reg_range),
+    # y_reg: Nx.to_flat_list(Nx.subtract(y_reg, Nx.mean(y_reg))) |> Enum.slice(reg_range)
+    y_orig: Nx.to_flat_list(y) |> Enum.slice(reg_range),
+    y_reg: Nx.to_flat_list(y_reg) |> Enum.slice(reg_range)
   ] ++ sample_concentrations
 )
 # |> Vl.mark(:circle)
@@ -1260,3 +1230,7 @@ Vl.new(width: 800, height: 600, autosize: [type: "fit", contains: "content"])
   # |> Vl.encode(:color, type: :nominal, datum: "Toluene")
 ])
 ```
+
+## References
+
+[Lecture notes on ridge regression](https://arxiv.org/pdf/1509.09169.pdf)
