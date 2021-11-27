@@ -13,7 +13,7 @@ defmodule Spex.Interp do
   Only really useful for arrays like `Nx.Tensor` to stay O(log n).
   """
   def binsearch_pred(data, fun) do
-    {len} = Nx.shape(data)
+    len = vector_length(data)
     binsearch_pred(data, fun, 0, len)
   end
 
@@ -37,11 +37,22 @@ defmodule Spex.Interp do
   end
 
   @doc """
+  Get length of single column vector, whether shape is 1D or 2D.
+  """
+  def vector_length(x) when is_list(x), do: Enum.count(x)
+  def vector_length(x) do
+    case Nx.shape(x) do
+      {len} -> len
+      {len, 1} -> len
+    end
+  end
+
+  @doc """
   Interpolate data linearly. `xdata` must be monotonically increasing
   """
   def interp(x, xdata, ydata, opts \\ [])
   def interp(x, xdata, ydata, _opts) do
-    {len} = Nx.shape(xdata)
+    len = vector_length(xdata)
     ix_next = binsearch_pred(xdata, fn v -> Nx.to_scalar(v) > x end)
     ix_prev = max(ix_next - 1, 0)
     ix_next = min(ix_next, len - 1)
@@ -49,6 +60,24 @@ defmodule Spex.Interp do
 
     interp_pair(x, ix_prev, ix_next, xdata, ydata)
   end
+
+
+  @doc """
+  Interpolate data linearly with a mapping function. `xdata` must be monotonically increasing.
+
+  `fun` takes an argument of (y), and is called with each y0, y1 to transform the value to be interpolated.
+  """
+  def interp_f(x, xdata, ydata, fun)
+  def interp_f(x, xdata, ydata, fun) do
+    len = vector_length(xdata)
+    ix_next = binsearch_pred(xdata, fn v -> Nx.to_scalar(v) > x end)
+    ix_prev = max(ix_next - 1, 0)
+    ix_next = min(ix_next, len - 1)
+    # Logger.debug("prev #{ix_prev}, next #{ix_next}")
+
+    interp_pair_f(x, ix_prev, ix_next, xdata, ydata, fun)
+  end
+
 
   @doc """
   re-bin x,y samples for a different x sampling.
@@ -133,6 +162,19 @@ defmodule Spex.Interp do
     u = Nx.divide(dx, sx)
     u1 = Nx.subtract(1.0, u)
     Nx.add(Nx.multiply(ydata[i_prev], u1), Nx.multiply(ydata[i_next], u))
+  end
+
+  defp interp_pair_f(_x, i_prev, i_prev, _xdata, ydata, fun) do
+    fun.(ydata[i_prev])
+  end
+
+  defp interp_pair_f(x, i_prev, i_next, xdata, ydata, fun) do
+    {x_prev, x_next} = {xdata[i_prev], xdata[i_next]}
+    sx = Nx.subtract(x_next, x_prev)
+    dx = Nx.subtract(x, x_prev)
+    u = Nx.divide(dx, sx)
+    u1 = Nx.subtract(1.0, u)
+    Nx.add(Nx.multiply(fun.(ydata[i_prev]), u1), Nx.multiply(fun.(ydata[i_next]), u))
   end
 
 
