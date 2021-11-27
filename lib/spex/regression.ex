@@ -74,4 +74,56 @@ defmodule Spex.Regression do
     Nx.LinAlg.solve(xtx_kip, xty)
   end
 
+  @doc """
+  Perform a simple classical total least squares regression.
+  """
+  def tls_reg(x, y = %{shape: {m}}), do: tls_reg(x, Nx.reshape(y, {m,1})) 
+  def tls_reg(x, y) do
+    {m, n} = Nx.shape(x)
+    {^m, k} = Nx.shape(y)
+    # x = Nx.backend_transfer(x, EXLA.DeviceBackend)
+    # y = Nx.backend_transfer(y, EXLA.DeviceBackend)
+    xy = Nx.concatenate([x,y], axis: 1)
+    {u,s,v} = svd(xy)
+    vxy = Nx.slice(v, [0, n], [n, k])
+    vyy = Nx.slice(v, [n, n], [k, k])
+    # TODO: we should check that Vyy is non-singular
+    Nx.multiply(-1.0, Nx.dot(vxy, Nx.LinAlg.invert(vyy)))
+
+    # Nx.LinAlg.triangular_solve(vyy, Nx.subtract(0.0, vxy), left_side: false)
+    # tls_regn(x,y,m,n,k) |> Nx.backend_transfer()
+  end
+
+  # defnp tls_regn(x, y, m, n, k) do
+  #   # [X Y] is an m-by-(n+k) matrix
+  #   xy = Nx.concatenate([x,y], axis: 1)
+  #   {u,s,v} = svd(xy)
+  #   vxy = Nx.slice(v, {0, n}, {n, k})
+  #   vyy = Nx.slice(v, {n, n}, {k, k})
+  #   # TODO: we should check that Vyy is non-singular
+  #   Nx.LinAlg.triangular_solve(vyy, Nx.subtract(0.0, vxy), left_side: false)
+
+  # end
+
+  @doc """
+  Perform SVD on given matrix, transposing it internally for optimal computation.
+  """
+  def svd(m, opts \\ []) do
+    # if the matrix is wider than tall, transpose it
+    {h, w} = Nx.shape(m)
+    transpose? = h < w
+
+    m = if transpose?, do: Nx.transpose(m), else: m
+
+    m = m |> Nx.backend_transfer(EXLA.DeviceBackend)
+    {u, s, v} = svdn(m, opts)
+
+    # if we had to transpose the matrix, reverse order and transpose results, too
+    if transpose?, do: {Nx.transpose(v), Nx.transpose(s), Nx.transpose(u)}, else: {u, s, v}
+  end
+
+  defn svdn(m, opts \\ []) do
+    Nx.LinAlg.svd(m, opts)
+  end
+
 end

@@ -1,5 +1,5 @@
 defmodule Spex.Gauss do
-	 
+
 	@doc """
   Do a simple [1,2,1] smoothing of a vector. 
 
@@ -38,9 +38,19 @@ defmodule Spex.Gauss do
   """
   def dog_pyramid_1d(x, 0), do: [x]
   def dog_pyramid_1d(x, n) do
-    xs = smooth(x, 3)
-    dog = Nx.subtract(x, xs)
-    [dog] ++ dog_pyramid_1d(subsample(xs), n-1)
+    xs1 = smooth(x, 1)
+    dog1 = Nx.subtract(x, xs1)
+    xs2 = smooth(xs1, 2)
+    dog2 = Nx.subtract(xs1, xs2)
+    [dog1, dog2] ++ dog_pyramid_1d(subsample(xs2), n-1)
+  end
+
+
+  def gaussian_pyramid_1d(x, 0), do: [x]
+  def gaussian_pyramid_1d(x, n) do
+    xs1 = smooth(x, 1)
+    xs2 = smooth(xs1, 2)
+    [xs1, xs2] ++ gaussian_pyramid_1d(subsample(xs2), n-1)
   end
 
   def subsample(x = %{shape: {n}}) when rem(n,2) == 1 do

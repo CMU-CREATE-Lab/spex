@@ -67,7 +67,7 @@ defmodule Spex.Utils do
   end
 
   @doc """
-  perform a linear regression based on the slope of the signal.
+  perform a linear regression based on the first Difference-of-Gaussians.
 
   Returns x,b to make it possible to reconstruct the estimated signal.
 
@@ -115,6 +115,21 @@ defmodule Spex.Utils do
     x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
     x = x[reg_range] 
     b = Spex.Regression.linreg(x,y)
+    {x, b}
+  end
+
+  def tls_regression(signal, ref_signal, wl, regressors, opts \\ []) do
+    wlmin = Keyword.get(opts, :wlmin, 210)
+    wlmax = Keyword.get(opts, :wlmax, 410)
+    imax = Enum.count(wl, fn x -> x < wlmax end)
+    imin = Enum.count(wl, fn x -> x < wlmin end)
+    reg_range = imin..(imax-1)
+
+    y = signal_to_attenuation(signal, ref_signal)[reg_range]
+    ones = Nx.tensor([for(_i <- 1..Enum.count(wl), do: 1.0)])
+    x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
+    x = x[reg_range] 
+    b = Spex.Regression.tls_reg(x,y)
     {x, b}
   end
 
