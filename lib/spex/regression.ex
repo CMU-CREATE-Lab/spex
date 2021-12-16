@@ -1,6 +1,9 @@
 defmodule Spex.Regression do
   import Nx.Defn
-  @default_defn_compiler EXLA
+
+  # @default_defn_compiler EXLA
+  # use `Nx.Defn.global_default_options(compiler: EXLA)` instead
+
 
   @doc """
   Compute a linear regression for $\beta$ being of shape {m,1}, $X$ being an {n,m} regressor matrix, and $Y$ an {n,1} shaped obeservation vector.
@@ -38,6 +41,8 @@ defmodule Spex.Regression do
   For UV-spectra, the $y_i$ are the signal intensities at each wavelength,
   and each $x_i$ row is the absorbance coefficients for the specific gases.
 
+  Requires EXLA backend to be set for numerical compile, set like so where used:
+  `Nx.Defn.global_default_options(compiler: EXLA)`
   """
   def linreg(x, y) do
     x = Nx.backend_transfer(x, EXLA.DeviceBackend)
@@ -84,7 +89,7 @@ defmodule Spex.Regression do
     # x = Nx.backend_transfer(x, EXLA.DeviceBackend)
     # y = Nx.backend_transfer(y, EXLA.DeviceBackend)
     xy = Nx.concatenate([x,y], axis: 1)
-    {u,s,v} = svd(xy)
+    {_u,_s,v} = svd(xy)
     vxy = Nx.slice(v, [0, n], [n, k])
     vyy = Nx.slice(v, [n, n], [k, k])
     # TODO: we should check that Vyy is non-singular
