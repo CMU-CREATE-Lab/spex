@@ -6,6 +6,7 @@ defmodule Spex.Interp do
   # import Nx.Defn
   # @defn_compiler EXLA
 
+
   @doc """
   Search in a list/array for data for first index where predicate is false.
 
@@ -26,8 +27,8 @@ defmodule Spex.Interp do
         lo
       true ->
         mid = div(lo + hi, 2)
-        pred = fun.(data[mid] |> Nx.to_scalar())
-        # Logger.debug("lo #{Nx.to_scalar(lo)}, hi #{Nx.to_scalar(hi)}, pred #{inspect(pred)}")
+        pred = fun.(data[mid] |> Nx.to_number())
+        # Logger.debug("lo #{Nx.to_number(lo)}, hi #{Nx.to_number(hi)}, pred #{inspect(pred)}")
         if !pred do
           binsearch_pred(data, fun, mid + 1, hi)
         else
@@ -53,7 +54,7 @@ defmodule Spex.Interp do
   def interp(x, xdata, ydata, opts \\ [])
   def interp(x, xdata, ydata, _opts) do
     len = vector_length(xdata)
-    ix_next = binsearch_pred(xdata, fn v -> Nx.to_scalar(v) > x end)
+    ix_next = binsearch_pred(xdata, fn v -> Nx.to_number(v) > x end)
     ix_prev = max(ix_next - 1, 0)
     ix_next = min(ix_next, len - 1)
     # Logger.debug("prev #{ix_prev}, next #{ix_next}")
@@ -70,7 +71,7 @@ defmodule Spex.Interp do
   def interp_f(x, xdata, ydata, fun)
   def interp_f(x, xdata, ydata, fun) do
     len = vector_length(xdata)
-    ix_next = binsearch_pred(xdata, fn v -> Nx.to_scalar(v) > x end)
+    ix_next = binsearch_pred(xdata, fn v -> Nx.to_number(v) > x end)
     ix_prev = max(ix_next - 1, 0)
     ix_next = min(ix_next, len - 1)
     # Logger.debug("prev #{ix_prev}, next #{ix_next}")
@@ -99,7 +100,7 @@ defmodule Spex.Interp do
     xin_tensor = Nx.tensor(xin)
     yin_tensor = Nx.tensor(yin)
 
-    bin_limit_y = Nx.map(bin_limit_x, fn (x) -> interp(Nx.to_scalar(x), xin_tensor, yin_tensor) end)
+    bin_limit_y = Nx.map(bin_limit_x, fn (x) -> interp(Nx.to_number(x), xin_tensor, yin_tensor) end)
 
     # the bins are filled so that they have a continuous piecewise function in them, 
     # including interpolated samples at upper and lower limits
