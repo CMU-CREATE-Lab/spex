@@ -4,9 +4,9 @@
 
 ~Bazel is needed for exla `brew install bazel`~
 
-Libtorch is needed, but `brew install libtorch` will not work, and one needs `pip3 install libtorch`.
+~Libtorch is needed, but `brew install libtorch` will not work, and one needs `pip3 install libtorch`.~
 
-Set `LIBTORCH_DIR=/usr/local/lib/python3.9/site-packages/libtorch/`, or whatever the installed libtorch ends up as, when starting livebook.
+~Set `LIBTORCH_DIR=/usr/local/lib/python3.9/site-packages/libtorch/`, or whatever the installed libtorch ends up as, when starting livebook.~
 
 ~`EXLA` is going to take a while to build (on the order of hours, possibly), but it is cached through bazel, so this only needs to be done once per EXLA release.~
 
@@ -47,6 +47,7 @@ alias Spex.RefSpec.Hitran, as: Hitran
 alias Spex.RefSpec.JcampDx, as: JcampDx
 
 # set default backend for numerical compute
+Nx.Defn.global_default_options(compiler: EXLA)
 # Nx.default_backend(EXLA.DeviceBackend)
 # Nx.default_backend(Torchx.Backend)
 ```
@@ -215,7 +216,7 @@ uv_references = Map.to_list(uv_references)
 
 {o3_wl, o3_norm} = Mainz.to_norm_spectrum(o3)
 
-{no2_wl, no2_norm} = Mainz.to_norm_spectrum(no2)
+# {no2_wl, no2_norm} = Mainz.to_norm_spectrum(no2)
 
 {formaldehyde_wl, formaldehyde_norm} = Mainz.to_norm_spectrum(formaldehyde)
 
@@ -308,8 +309,8 @@ defmodule SpecPlot do
         |> Vl.mark(:line, clip: true, tooltip: true)
         |> Vl.encode(:size, value: 1.0)
         |> Vl.encode(:color, value: Enum.at(colors, i), type: :ordinal, legend: [title: "#{name}"])
-        |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [wlmin, wlmax]])
-        # |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [230, 300]])
+        # |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [wlmin, wlmax]])
+        |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [210, 360]])
         |> Vl.encode_field(:y, "y",
           type: :quantitative,
           title: "#{name}",
@@ -324,12 +325,13 @@ defmodule SpecPlot do
   end
 end
 
-plot_names = [:benzene, :ozone]
+plot_names = [:benzene]
 
 # refs = for name <- plot_names, into: %{}, do: {name, uv_references[name]}
 
 refs =
-  for {name, val} <- uv_references,
+  for {name, val} <-
+        Spex.RefSpec.raw_uvspec_references() |> Spex.RefSpec.remap_references(uvspec_wl),
       name in plot_names,
       do: {name, val}
 
@@ -342,23 +344,40 @@ alias Spex.RefSpec, as: RefSpec
 
 defmodule Gauss do
   def plot_pyramid(pyramid, wl) do
-    colors = ["blue", "purple", "red", "orange", "yellow", "green", "cyan", "blue", "black"]
+    colors = [
+      "blue",
+      "purple",
+      "red",
+      "orange",
+      "yellow",
+      "green",
+      "cyan",
+      "blue",
+      "black",
+      "darkgray",
+      "gray",
+      "lightgray"
+    ]
 
     layers =
       for {y, i} <- Enum.with_index(pyramid) do
         flaty = Nx.to_flat_list(y)
         n = Enum.count(flaty)
-        stride = Integer.pow(2, i)
+        stride = Integer.pow(2, div(i, 2))
 
         x = for j <- 1..n, do: Enum.at(wl, (j - 1) * stride + div(stride, 2), 0.0)
 
         Vl.new()
         |> Vl.data_from_series(x: x, y: flaty)
-        |> Vl.mark(:line, clip: true)
+        |> Vl.mark(:line, clip: true, tooltip: true)
         |> Vl.encode(:size, value: 1.0)
         |> Vl.encode(:color, value: Enum.at(colors, i), type: :ordinal, legend: [title: "#{i}"])
         |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [210, 310]])
-        |> Vl.encode_field(:y, "y", type: :quantitative, title: "#{i}")
+        |> Vl.encode_field(:y, "y",
+          type: :quantitative,
+          title: "#{i}",
+          scale: [domain: [-7.816830422244086e-19, 7.816830422244086e-19]]
+        )
 
         # Enum.count(x)
       end
@@ -373,8 +392,19 @@ benzene_regressor = RefSpec.regressor(benzene, uvspec_wl)
 # toluene_regressor = RefSpec.regressor(toluene, uvspec_wl)
 
 benzene_n1 = Spex.Gauss.smooth(benzene_regressor, 3)
-pyramid = Spex.Gauss.dog_pyramid_1d(benzene_regressor, 8)
-pyramid |> Gauss.plot_pyramid(uvspec_wl)
+gauss_pyramid = Spex.Gauss.gaussian_pyramid_1d(benzene_regressor, 8)
+dog_pyramid = Spex.Gauss.dog_pyramid_1d(benzene_regressor, 8)
+
+Vl.new(width: 700, height: 400)
+|> Vl.concat(
+  [
+    Gauss.plot_pyramid(gauss_pyramid, uvspec_wl),
+    Gauss.plot_pyramid(dog_pyramid, uvspec_wl)
+  ],
+  :vertical
+)
+
+# Enum.max(benzene.spectrum.attenuation)
 
 # SMA.plotxy(
 #   for({x,i} <- Enum.with_index(uvspec_wl), rem(i, 2) == 0, do: x), 
@@ -406,11 +436,12 @@ Relevant dates:
 * 2021-07-14 large spike around midnight
 * 2021-08-21/22 large event at night
 
-<!-- livebook:{"livebook_object":"cell_input","name":"uvspec_date","reactive":true,"type":"text","value":"2021-07-15"} -->
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 # construct iso860 string from date
-date_string = String.trim(IO.gets("uvspec_date")) <> "T00:00:00Z"
+
+date_string = "2021-08-21" <> "T00:00:00Z"
 data_date = NaiveDateTime.from_iso8601!(date_string)
 
 date_path =
@@ -650,6 +681,9 @@ but remove the regressed components from the signal before continuing to the nex
 This way, as we approach lower frequencies, 
 we can incrementally sum the regression parameters.
 
+Unfortunately, it turns out that using this method does not reliably converge, 
+resulting in significant over-estimation of pollutants with strong high-frequency components.
+
 <!-- livebook:{"disable_formatting":true} -->
 
 ```elixir
@@ -663,27 +697,28 @@ defmodule Test do
     last_index = if cut_residual do -2 else -1 end
 
     y = Spex.Utils.signal_to_attenuation(signal, ref_signal)
+    {n} = Nx.shape(y)
+
+    ones = Nx.broadcast(1.0, {1, n})
+    zero_pyramid = Spex.Gauss.dog_pyramid_1d(ones, levels) 
+      |> Enum.slice(0..last_index//1)
+      |> Nx.concatenate(axis: 1)
 
     reg_pyramids = for reg <- regressors do 
-      Spex.Gauss.dog_pyramid_1d(reg, levels) |> Enum.slice(0..last_index//1)
-    end |> Enum.zip()
-    reg_pyramids = for tuple <- reg_pyramids do
-      Tuple.to_list(tuple) 
+      Spex.Gauss.dog_pyramid_1d(reg, levels) 
+      |> Enum.slice(0..last_index//1)
+      |> Nx.concatenate(axis: 1)
     end
 
     # IO.puts("reg_pyramids=#{inspect(for(p <- reg_pyramids, do: Enum.count(p)))}")
 
-    y_pyramid = Spex.Gauss.dog_pyramid_1d(y, levels) |> Enum.slice(0..last_index//1)
+    y_pyramid = Spex.Gauss.dog_pyramid_1d(y, levels) |> Enum.slice(0..last_index//1) |> Nx.concatenate()
 
-    b = Nx.broadcast(0.0, {Enum.count(regressors)+1})
-    b = pyramid_reg_iter(y_pyramid, reg_pyramids, b, opts)
 
-    {n} = Nx.shape(y)
-    # ones = Nx.tensor([for(_i <- 1..n, do: 1.0e0)])
-    ones = Nx.broadcast(1.0, {1, n})
+    x_pyramid = Nx.concatenate([zero_pyramid | reg_pyramids], axis: 0) |> Nx.transpose()
+    b = Spex.Regression.linreg(x_pyramid,y_pyramid)
 
     x = Nx.concatenate([ones | regressors], axis: 0) |> Nx.transpose()
-
     {x, b}
   end
 
@@ -774,14 +809,14 @@ defmodule Test do
 
   def compute_concentration(signal, ref_signal, wl, regressors, refnames, opts \\ []) do
 
-    # {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, opts)
-    {x, b} = pyramid_regression(
-      signal, 
-      ref_signal, 
-      regressors,
-      cut_pyramid_residual: true, 
-      levels: 6
-    )
+    {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, opts)
+    # {x, b} = pyramid_regression(
+    #   signal, 
+    #   ref_signal, 
+    #   regressors,
+    #   cut_pyramid_residual: false, 
+    #   levels: 6
+    # )
 
 
     y = Spex.Utils.signal_to_attenuation(signal, ref_signal)
@@ -843,7 +878,7 @@ reg_range = Spex.Utils.in_range(uvspec_wl, wlmin, wlmax)
 ref_signal = Nx.reduce_max(minute_signal_tensor, axes: [:time])
 # ref_signal = Nx.mean(minute_signal_tensor, axes: [:time])
 
-betas =
+regression_results =
   Test.compute_all_concentrations(
     minute_signal_tensor[0..100],
     ref_signal,
@@ -857,7 +892,7 @@ betas =
 concentrations =
   for {name, _} <- uv_references, into: [] do
     x =
-      for s <- betas, into: [] do
+      for s <- regression_results, into: [] do
         Keyword.get(s, name, 0.0)
       end
 
@@ -886,10 +921,10 @@ Vl.new(width: 700, height: 400, title: "Pollutant concentration over time")
   |> Vl.encode_field(:x, "x",
     type: :temporal,
     scale: [
-      domain: [
-        Enum.at(timestamps, 0) |> DateTime.to_iso8601(),
-        Enum.at(timestamps, 100) |> DateTime.to_iso8601()
-      ]
+      # domain: [
+      #   Enum.at(timestamps, 0) |> DateTime.to_iso8601(),
+      #   Enum.at(timestamps, 100) |> DateTime.to_iso8601()
+      # ]
     ],
     title: "Sample"
   )
@@ -901,37 +936,39 @@ Vl.new(width: 700, height: 400, title: "Pollutant concentration over time")
 ```
 
 ```elixir
-
+regression_results
 ```
 
 ```elixir
 y_sources =
-  for conc <- betas, into: [] do
+  for conc <- regression_results, into: [] do
     Keyword.get(conc, :y_source, 0.0)
   end
 
 y_models =
-  for conc <- betas, into: [] do
+  for conc <- regression_results, into: [] do
     Keyword.get(conc, :y_modeled, 0.0)
   end
 
 xs =
-  for conc <- betas, into: [] do
+  for conc <- regression_results, into: [] do
     Keyword.get(conc, :x, 0.0)
   end
 
 betas =
-  for conc <- betas, into: [] do
+  for conc <- regression_results, into: [] do
     Keyword.get(conc, :beta, 0.0)
   end
 
 nil
 ```
 
-<!-- livebook:{"livebook_object":"cell_input","name":"plot_sample","reactive":true,"type":"number","value":"9"} -->
+```elixir
+plot_sample_input = Kino.Input.number("plot_sample", default: 1)
+```
 
 ```elixir
-{plot_sample, "\n"} = IO.gets("plot_sample") |> Integer.parse()
+plot_sample = Kino.Input.read(plot_sample_input) |> trunc()
 
 y = Enum.at(y_sources, plot_sample)
 # y_reg = Enum.at(y_models, plot_sample)
@@ -959,10 +996,10 @@ Vl.new(width: 700, height: 400, title: "Regression Model at #{DateTime.to_iso860
 |> Vl.data_from_series(
   [
     x: Enum.slice(uvspec_wl, reg_range),
-    # y_orig: Nx.to_flat_list(Nx.subtract(y, Nx.mean(y))) |> Enum.slice(reg_range),
-    # y_reg: Nx.to_flat_list(Nx.subtract(y_reg, Nx.mean(y_reg))) |> Enum.slice(reg_range)
-    y_orig: Nx.to_flat_list(y) |> Enum.slice(reg_range),
-    y_reg: Nx.to_flat_list(y_reg) |> Enum.slice(reg_range)
+    y_orig: Nx.to_flat_list(Nx.subtract(y, Nx.mean(y))) |> Enum.slice(reg_range),
+    y_reg: Nx.to_flat_list(Nx.subtract(y_reg, Nx.mean(y_reg))) |> Enum.slice(reg_range)
+    # y_orig: Nx.to_flat_list(y) |> Enum.slice(reg_range),
+    # y_reg: Nx.to_flat_list(y_reg) |> Enum.slice(reg_range)
   ] ++ sample_concentrations
 )
 # |> Vl.mark(:circle)
@@ -985,12 +1022,13 @@ Vl.new(width: 700, height: 400, title: "Regression Model at #{DateTime.to_iso860
   )
   # |> Vl.encode_field(:color, datum: [repeat: "layer"], type: :nominal)
   |> Vl.encode_repeat(:y, :layer, type: :quantitative, scale: [zero: false], title: "Attenuation")
-  |> Vl.encode(:color, type: :nominal, datum: [repeat: :layer])
+  |> Vl.encode(:color, type: :nominal, datum: [repeat: :layer], scale: [scheme: "category20"])
 )
 ```
 
 ```elixir
-for {b, name} <- Enum.zip(Nx.to_flat_list(b[1..-1//1]), refnames), abs(b) > 1.0e3, do: {name, b}
+# for {b, name} <- Enum.zip(Nx.to_flat_list(b[1..-1//1]), refnames), abs(b) > 1.0e3, do: {name, b}
+x[-8..-1]
 ```
 
 ```elixir
@@ -1234,3 +1272,11 @@ Vl.new(width: 800, height: 600, autosize: [type: "fit", contains: "content"])
 ## References
 
 [Lecture notes on ridge regression](https://arxiv.org/pdf/1509.09169.pdf)
+
+[Gaussian Scale Space](https://people.kth.se/~tony/papers/cvap198.pdf)
+
+[Conjugate Gradient](https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf)
+
+<!-- livebook:{"break_markdown":true} -->
+
+
