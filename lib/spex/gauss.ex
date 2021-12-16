@@ -59,10 +59,10 @@ defmodule Spex.Gauss do
   end
   def subsample(x = %{shape: {n}}) when rem(n,2) == 0 do
   	#Nx.slice seems buggy, so use reduce_window
-		a = Nx.reduce_window(x, 0.0, {1}, [strides: [2]], fn (x, _acc) -> 
+		a = Nx.window_reduce(x, 0.0, {1}, [strides: [2]], fn (x, _acc) -> 
 		  x
 		end)
-		b = Nx.reduce_window(x, 0.0, {1}, [strides: [2]], fn (x, _acc) -> 
+		b = Nx.window_reduce(x, 0.0, {1}, [strides: [2]], fn (x, _acc) -> 
 		  x
 		end)
 		Nx.multiply(Nx.add(a,b), 0.5)
