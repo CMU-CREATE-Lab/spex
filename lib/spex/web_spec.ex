@@ -95,6 +95,9 @@ defmodule Spex.WebSpec do
     data
   end
 
+  defp maybe_decode_json(string) when is_binary(string), do: Jason.decode!("[#{string}]")
+  defp maybe_decode_json(json), do: json
+
   @doc """
   Get spectrometer samples from given URL.
   """
@@ -103,7 +106,7 @@ defmodule Spex.WebSpec do
 
     # get wavelength info from first sample (all samples should be the same)
     [%{"Wavelengths" => uvspec_wl_json} | _] = uvspec_samples
-    uvspec_wl = Jason.decode!("[#{uvspec_wl_json}]")
+    uvspec_wl = maybe_decode_json(uvspec_wl_json)
 
     # get timestamps
     timestamps =
@@ -115,7 +118,7 @@ defmodule Spex.WebSpec do
     # get sample data
     signals =
       for sample <- uvspec_samples do
-        y = Jason.decode!("[#{sample["Signals"]}]")
+        y = maybe_decode_json(sample["Signals"])
         y
       end
 
