@@ -3,6 +3,7 @@ defmodule Spex.Regression do
 
   # @default_defn_compiler EXLA
   # use `Nx.Defn.global_default_options(compiler: EXLA)` instead
+  # use `Nx.Defn.default_options(compiler: EXLA)` instead
 
 
   @doc """
@@ -45,8 +46,8 @@ defmodule Spex.Regression do
   `Nx.Defn.global_default_options(compiler: EXLA)`
   """
   def linreg(x, y) do
-    x = Nx.backend_transfer(x, EXLA.DeviceBackend)
-    y = Nx.backend_transfer(y, EXLA.DeviceBackend)
+    # x = Nx.backend_transfer(x, EXLA.DeviceBackend)
+    # y = Nx.backend_transfer(y, EXLA.DeviceBackend)
     linregn(x,y) |> Nx.backend_transfer()
   end
 

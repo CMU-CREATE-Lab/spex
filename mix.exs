@@ -30,9 +30,12 @@ defmodule Spex.MixProject do
   defp deps do
     [
       # numerical compute
+      # {:nx, "~> 0.1"},
+      # {:exla, "~> 0.1"},
+      # {:torchx, "~> 0.1"},
       {:exla, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "exla"},
       {:torchx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "torchx"},
-      {:nx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "nx", override: true},
+      {:nx, "~> 0.1", github: "elixir-nx/nx", sparse: "nx", override: true},
       # html/json/excel parsing
       {:floki, "~> 0.31.0"},
       {:jason, "~> 1.2"},

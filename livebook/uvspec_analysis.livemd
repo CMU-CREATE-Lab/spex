@@ -23,9 +23,16 @@ Mix.Utils.mix_cache()
 ```elixir
 Mix.install([
   # basic numerics
+  # {:nx, "~> 0.1"},
+  # {:exla, "~> 0.1"},
+  # {:torchx, "~> 0.1"},
   {:exla, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "exla"},
   {:torchx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "torchx"},
-  {:nx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "nx", override: true},
+  {:nx, "~> 0.1",
+   github: "elixir-nx/nx",
+   sparse: "nx",
+   ref: "2c534e27e16bc7793c50620d9b3d53f2f1b53c46",
+   override: true},
   # {:nx, "~> 0.1.0-dev", github: "dognotdog/nx", sparse: "nx", override: true, branch: "triangular-solve-dims-fix"},
 
   # visualization
@@ -47,7 +54,8 @@ alias Spex.RefSpec.Hitran, as: Hitran
 alias Spex.RefSpec.JcampDx, as: JcampDx
 
 # set default backend for numerical compute
-Nx.Defn.global_default_options(compiler: EXLA)
+Nx.Defn.default_options(compiler: EXLA)
+# Nx.Defn.default_options(compiler: Nx.Defn.Expr)
 # Nx.default_backend(EXLA.DeviceBackend)
 # Nx.default_backend(Torchx.Backend)
 ```
@@ -503,12 +511,12 @@ Plot a single spectrum as a sanity check, simply by plotting the first spectrum 
 ```elixir
 [file | _] = data_files
 
-uvspec_data = Spex.WebSpec.get_uvspec_data_file(<<data_url <> "/" <> file>>)
+uvspec_data = Spex.WebSpec.get_uvspec_samples(<<data_url <> "/" <> file>>)
 # for newer files json is decoded already
 # x = Jason.decode!("[#{uvspec_data["Wavelengths"]}]")
 # y = Jason.decode!("[#{uvspec_data["Signals"]}]")
-x = uvspec_data["Wavelengths"]
-y = uvspec_data["Signals"]
+x = uvspec_data[:wavelengths]
+y = uvspec_data[:signals]
 
 # plot a spectrum
 Vl.new(width: 700, height: 400)
@@ -835,7 +843,7 @@ defmodule Test do
     molecular_masses = Spex.RefSpec.molecular_masses()
 
     for {i, name} <- Enum.zip([Enum.to_list(1..Enum.count(refnames)), refnames]) do
-      b = beta[i] |> Nx.to_scalar()
+      b = beta[i] |> Nx.to_number()
       # n is n/cm^3
       n = b / (path_length * 100)
       # g / cm^3 = 1.0e-6 g/m^3
@@ -862,7 +870,7 @@ defmodule Test do
     molecular_masses = Spex.RefSpec.molecular_masses()
 
     for {name, beta} <- betas, molecular_masses[name] != nil do
-      b = beta |> Nx.to_scalar()
+      b = beta |> Nx.to_number()
       # n is n/cm^3
       n = b / (path_length * 100)
       # g / cm^3 = 1.0e-6 g/m^3
