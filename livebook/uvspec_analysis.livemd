@@ -295,7 +295,20 @@ defmodule SpecPlot do
       "cyan",
       "blue",
       "black",
-      "gray"
+      "gray",
+      "maroon",
+      "aquamarine",
+      "teal",
+      "navy",
+      "darkseagreen",
+      "khaki",
+      "lightcoral",
+      "lightpink",
+      "salmon",
+      "darkorange",
+      "lavender",
+      "mediumvioletred",
+      "fuchsia"
     ]
 
     layers =
@@ -325,14 +338,42 @@ defmodule SpecPlot do
   end
 end
 
-plot_names = [:benzene]
+plot_names = [:ozone, :so2, :no2]
+
+nonplot_names = [
+  :m_xylene_hi,
+  :m_xylene_lo,
+  :o_xylene_hi,
+  :o_xylene_lo,
+  :p_xylene_hi,
+  :p_xylene_lo,
+  :no2_hi,
+  :no2_lo,
+  :ozone_720k
+]
+
+# spiky: [
+# :benzene, 
+# :formaldehyde, 
+# :m_xylene
+# :naphthalene, 
+# :no2,
+# :o_xylene, 
+# :p_xylene, 
+# :phenol, 
+# :toluene, 
+# :so2, 
+# ]
+# flat: [:h2s, :n2o]
+# both: [:ozone]
 
 # refs = for name <- plot_names, into: %{}, do: {name, uv_references[name]}
 
 refs =
   for {name, val} <-
         Spex.RefSpec.raw_uvspec_references() |> Spex.RefSpec.remap_references(uvspec_wl),
-      name in plot_names,
+      # name in plot_names,
+      name not in nonplot_names,
       do: {name, val}
 
 # refs
@@ -441,7 +482,7 @@ Relevant dates:
 ```elixir
 # construct iso860 string from date
 
-date_string = "2021-08-21" <> "T00:00:00Z"
+date_string = "2021-07-14" <> "T00:00:00Z"
 data_date = NaiveDateTime.from_iso8601!(date_string)
 
 date_path =
@@ -463,8 +504,11 @@ Plot a single spectrum as a sanity check, simply by plotting the first spectrum 
 [file | _] = data_files
 
 uvspec_data = Spex.WebSpec.get_uvspec_data_file(<<data_url <> "/" <> file>>)
-x = Jason.decode!("[#{uvspec_data["Wavelengths"]}]")
-y = Jason.decode!("[#{uvspec_data["Signals"]}]")
+# for newer files json is decoded already
+# x = Jason.decode!("[#{uvspec_data["Wavelengths"]}]")
+# y = Jason.decode!("[#{uvspec_data["Signals"]}]")
+x = uvspec_data["Wavelengths"]
+y = uvspec_data["Signals"]
 
 # plot a spectrum
 Vl.new(width: 700, height: 400)
@@ -774,7 +818,7 @@ defmodule Test do
   at the beginning for the constant factor, 
   which is ignored here.
   """
-  def attenuation_to_concentration(beta, refnames, opts \\ []) do
+  def attenuation_to_concentration(beta, refnames, opts) do
     # quantifying the attenuation
     # beta containes the attenuations
     # path length is 17 meters
@@ -801,6 +845,33 @@ defmodule Test do
     end
   end
 
+  def attenuation_to_concentration(betas, opts) do
+    # quantifying the attenuation
+    # beta containes the attenuations
+    # path length is 17 meters
+    # sigma is [cm^2/mol] from the reference data
+    # number density n is [1/volume]
+    # \beta is result of the linear regression, and it relates \tau = \beta \sigma
+    path_length = Keyword.get(opts, :path_length_m, 17.0)
+    # \tau = \sigma l n
+    # -> \tau / \sigma = \beta = l n
+    # -> n = \beta / l
+
+    na = 6.02214076e23
+    # g/mol
+    molecular_masses = Spex.RefSpec.molecular_masses()
+
+    for {name, beta} <- betas, molecular_masses[name] != nil do
+      b = beta |> Nx.to_scalar()
+      # n is n/cm^3
+      n = b / (path_length * 100)
+      # g / cm^3 = 1.0e-6 g/m^3
+      density_g_cm3 = n / na * molecular_masses[name]
+      # convert to ug/m^3
+      {name, _density = density_g_cm3 * 1.0e6 * 1.0e6}
+    end
+  end
+
   def pmap(collection, func) do
     collection
     |> Enum.map(&(Task.async(fn -> func.(&1) end)))
@@ -809,7 +880,33 @@ defmodule Test do
 
   def compute_concentration(signal, ref_signal, wl, regressors, refnames, opts \\ []) do
 
-    {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, opts)
+    # some signals are good with slope, some more with value
+    spiky_refnames = [
+      :benzene, 
+      :formaldehyde, 
+      :naphthalene, 
+      :phenol, 
+      :so2, 
+      :toluene, 
+      :o_xylene, 
+      :p_xylene, 
+      :m_xylene, 
+      :no2]
+    flat_refnames = [:h2s, :n2o]
+    both_refnames =  [:ozone]
+
+    spiky_regressors = for item = {name, _regressor} <- Enum.zip([refnames, regressors]), (name in spiky_refnames) or (name in both_refnames) do
+      item
+    end
+    flat_regressors = for item = {name, _regressor} <- Enum.zip([refnames, regressors]), (name in flat_refnames) or (name in both_refnames) do
+      item
+    end
+      
+    # IO.puts("spiky_regressors=#{inspect(spiky_regressors)}")
+    # IO.puts("flat_regressors=#{inspect(spiky_regressors)}")
+
+    reg_results = Spex.Utils.slope_value_regression(signal, ref_signal, wl, spiky_regressors, flat_regressors, opts)
+    # {x, b} = Spex.Utils.slope_regression(signal, ref_signal, wl, regressors, opts)
     # {x, b} = pyramid_regression(
     #   signal, 
     #   ref_signal, 
@@ -817,14 +914,17 @@ defmodule Test do
     #   cut_pyramid_residual: false, 
     #   levels: 6
     # )
+    # IO.puts("reg_results=#{inspect(reg_results)}")
 
 
     y = Spex.Utils.signal_to_attenuation(signal, ref_signal)
 
     # IO.puts("x=#{inspect(Nx.shape(x))}, b=#{inspect(Nx.shape(b))}")
-    y_reg = Nx.dot(x, b)
+    x = reg_results.combined_x
+    b = reg_results.combined_params
+    y_reg = reg_results.y_value
 
-    [y_modeled: y_reg, y_source: y, x: x, beta: b] ++ attenuation_to_concentration(b, refnames, opts)
+    [y_modeled: y_reg, y_source: y, x: x, beta: b] ++ attenuation_to_concentration(b, opts)
   end
 
   def compute_all_concentrations(signals, ref_signal, wl, regressors, refnames, opts) do
@@ -854,12 +954,7 @@ end
 ```
 
 ```elixir
-a = Nx.tensor([[1.0, 2, 3, 4, 5]]) |> Nx.transpose()
-Spex.Utils.cumsum(a, axis: 0)
-[head | tail] = [1, 3]
-tail
-
-Enum.to_list(0..0//1)
+regressors
 ```
 
 ```elixir
@@ -875,12 +970,12 @@ reg_range = Spex.Utils.in_range(uvspec_wl, wlmin, wlmax)
 # which in turn means that degradation of the light source and optical path over time
 # will shift baselines, but can be compensated with a "rolling" reference max or mean.
 
-ref_signal = Nx.reduce_max(minute_signal_tensor, axes: [:time])
-# ref_signal = Nx.mean(minute_signal_tensor, axes: [:time])
+# ref_signal = Nx.reduce_max(minute_signal_tensor, axes: [:time])
+ref_signal = Nx.mean(minute_signal_tensor, axes: [:time])
 
 regression_results =
   Test.compute_all_concentrations(
-    minute_signal_tensor[0..100],
+    minute_signal_tensor[1..-1//1],
     ref_signal,
     uvspec_wl,
     regressors,
@@ -898,7 +993,9 @@ concentrations =
 
     {name, x}
   end
+```
 
+```elixir
 nil
 ```
 
@@ -916,7 +1013,14 @@ Vl.new(width: 700, height: 400, title: "Pollutant concentration over time")
   [layer: refnames],
   Vl.new()
   # |> Vl.mark(:circle, clip: true, size: 10, opacity: 0.5)
-  |> Vl.mark(:line, clip: true, size: 1, tooltip: true)
+  |> Vl.mark(:line,
+    clip: true,
+    size: 1,
+    tooltip: [
+      [field: "x", type: "nominal"],
+      [field: "y", type: "quantitative"]
+    ]
+  )
   # |> Vl.encode_field(:x, "x", type: :quantitative, scale: [domain: [788, Enum.count(timestamps)]], title: "Sample")
   |> Vl.encode_field(:x, "x",
     type: :temporal,
@@ -936,7 +1040,7 @@ Vl.new(width: 700, height: 400, title: "Pollutant concentration over time")
 ```
 
 ```elixir
-regression_results
+regression_results |> Enum.at(0) |> Keyword.get(:x)
 ```
 
 ```elixir
@@ -964,6 +1068,10 @@ nil
 ```
 
 ```elixir
+xs |> Enum.at(0)
+```
+
+```elixir
 plot_sample_input = Kino.Input.number("plot_sample", default: 1)
 ```
 
@@ -980,11 +1088,12 @@ b_tuning = [1.0, 1.0, 1.0, 1.1, 0.5] |> Nx.tensor()
 
 # b = Nx.multiply(b, b_tuning)
 
-y_reg = Nx.dot(x, b)
+y_reg = Nx.dot(x, Enum.map(b, fn {name, val} -> val end) |> Nx.tensor() |> Nx.transpose())
 
 sample_concentrations =
   for {name, i} <- Enum.with_index(refnames) do
-    bb = Nx.to_scalar(b[i + 1])
+    # bb = Nx.to_number(b[i + 1])
+    bb = Nx.to_number(b[name])
 
     {
       name,
@@ -1124,7 +1233,7 @@ so2_scaled = Nx.multiply(so2_norm, 500.0)
 
 # plot a spectrum
 # plot_range = [246, 260]
-plot_range = [220, 360]
+plot_range = [210, 360]
 # plot_range = [290, 315]
 Vl.new(width: 700, height: 400, autosize: [type: "fit", contains: "content"])
 |> Vl.encode(:size, value: 1)
