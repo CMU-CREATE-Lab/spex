@@ -39,6 +39,15 @@ defmodule Spex.RefSpec do
 
     [toluene] = Hitran.load_xsc(Path.join([refdata_path, "612d27aa/C7H8_293.0_0.0_35990.0-41285.0_09.xsc"]))
 
+    o2_lo = Mainz.load!(Path.join([refdata_path, "O2_JPL-2010(2011)_298K_205-245nm(rec).txt"]))
+    o2_hi = Mainz.load!(Path.join([refdata_path, "O2_Bogumil(2003)_293K_235-389nm.txt"]))
+
+    o2 = %{spectrum: %{
+      wavelength: Enum.slice(o2_lo.spectrum.wavelength, 0..30) ++ Enum.slice(o2_hi.spectrum.wavelength, 1..-1//1),
+      attenuation: Enum.map(Enum.slice(o2_lo.spectrum.attenuation, 0..30), &(&1 * (4.865865E-24/1.63e-24))) ++ Enum.slice(o2_hi.spectrum.attenuation, 1..-1//1)
+    }}
+
+
     # match the two NO2 references
     no2_lo = Mainz.load!(Path.join([refdata_path, "NO2_Olive(2011)_298K_200-240nm.txt"]))
     no2_hi = Mainz.load!(Path.join([refdata_path, "NO2_Bogumil(2003)_293K_230-930nm.txt"]))
@@ -91,6 +100,9 @@ defmodule Spex.RefSpec do
       formaldehyde: Mainz.load!(Path.join([refdata_path, "CH2O_MellerMoortgat(2000)_298K_224.56-376.00nm(0.01nm).txt"])),
       phenol: Mainz.load!(Path.join([refdata_path, "C6H5OH_Limao-Vieira(2016)_298K_115.00-334.00nm.txt"])),
       toluene: toluene,
+      o2_lo: o2_lo,
+      o2_hi: o2_hi,
+      o2: o2,
     }
   end
 
