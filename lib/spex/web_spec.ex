@@ -81,15 +81,21 @@ defmodule Spex.WebSpec do
     # filter for files that begin with uvspec
     files = for <<"uvspec" <> _>> = name <- list_html_dir(url), do: name
 
+
     cache_dir = "uvspec_cache"
     File.mkdir(cache_dir)
 
     # Logger.info("getting data from #{url}...")
 
-    data =
-      for file <- files do
-        get_uvspec_data_file(<<url <> "/" <> file>>, cache_dir)
-      end
+    # if no files from listing url, try url directly in case it's a file not a directory
+    data = case files do
+      [] -> 
+        [get_uvspec_data_file(url, cache_dir)]
+      files ->
+        for file <- files do
+          get_uvspec_data_file(<<url <> "/" <> file>>, cache_dir)
+        end
+    end
 
     Logger.info("getting data from #{url} complete!")
     data
