@@ -1096,10 +1096,10 @@ b_tuning = [1.0, 1.0, 1.0, 1.1, 0.5] |> Nx.tensor()
 
 # b = Nx.multiply(b, b_tuning)
 
-y_reg = Nx.dot(x, Enum.map(b, fn {name, val} -> val end) |> Nx.tensor() |> Nx.transpose())
+y_reg = Nx.dot(x, Enum.map(b, fn {_name, val} -> val end) |> Nx.tensor() |> Nx.transpose())
 
 sample_concentrations =
-  for {name, i} <- Enum.with_index(refnames) do
+  for {name, i} <- Enum.with_index(refnames), name in b do
     # bb = Nx.to_number(b[i + 1])
     bb = Nx.to_number(b[name])
 
