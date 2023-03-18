@@ -90,7 +90,7 @@ defmodule Spex.RefSpec do
       p_xylene: p_xylene,
       h2s: Mainz.load!(Path.join([refdata_path, "H2S_Grosch(2015)_294.8K_198-370nm.txt"])),
       so2: Mainz.load!(Path.join([refdata_path, "SO2_Danielache(2008)_293K_183-350nm(32SO2).txt"])),
-      # o2: Mainz.load!(Path.join([refdata_path, "O2_JPL-2010(2011)_298K_205-245nm(rec).txt"])),
+      o2: Mainz.load!(Path.join([refdata_path, "O2_JPL-2010(2011)_298K_205-245nm(rec).txt"])),
       ozone: Mainz.load!(Path.join([refdata_path, "O3_Serdyuchenko(2014)_293K_213-1100nm(2013 version).txt"])),
       # ozone_720k: Mainz.load!(Path.join([refdata_path, "O3_Astholz(1982)_720K_210-325nm.txt"])),
       # no2_lo: no2_lo,

@@ -28,11 +28,12 @@ Mix.install([
   # {:torchx, "~> 0.1"},
   {:exla, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "exla"},
   {:torchx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "torchx"},
-  {:nx, "~> 0.1",
-   github: "elixir-nx/nx",
-   sparse: "nx",
-   ref: "2c534e27e16bc7793c50620d9b3d53f2f1b53c46",
-   override: true},
+  {
+    :nx,
+    "~> 0.1",
+    #  ref: "2c534e27e16bc7793c50620d9b3d53f2f1b53c46",
+    github: "elixir-nx/nx", sparse: "nx", override: true
+  },
   # {:nx, "~> 0.1.0-dev", github: "dognotdog/nx", sparse: "nx", override: true, branch: "triangular-solve-dims-fix"},
 
   # visualization

@@ -33,13 +33,13 @@ defmodule Spex.MixProject do
       # {:nx, "~> 0.1"},
       # {:exla, "~> 0.1"},
       # {:torchx, "~> 0.1"},
-      {:exla, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "exla"},
-      {:torchx, "~> 0.1.0-dev", github: "elixir-nx/nx", sparse: "torchx"},
+      {:exla, "~> 0.1", github: "elixir-nx/nx", sparse: "exla"},
+      {:torchx, "~> 0.1", github: "elixir-nx/nx", sparse: "torchx"},
       {:nx, "~> 0.1", github: "elixir-nx/nx", sparse: "nx", override: true},
       # html/json/excel parsing
-      {:floki, "~> 0.31.0"},
+      {:floki, "~> 0.34"},
       {:jason, "~> 1.2"},
-      {:xlsxir, "~> 1.6.4"},
+      {:xlsxir, "~> 1.6"},
       # time zones
       {:tzdata, "~> 1.1"},
 
